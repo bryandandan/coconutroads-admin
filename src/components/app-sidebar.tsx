@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { IconCalendar, IconDashboard, IconInnerShadowTop } from '@tabler/icons-react'
+import Image from 'next/image'
+import { IconCalendar, IconDashboard } from '@tabler/icons-react'
 
 import { NavMain } from '@/components/nav-main'
 import { NavUser } from '@/components/nav-user'
@@ -49,7 +50,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="/">
-                <IconInnerShadowTop className="!size-5" />
+                <Image
+                  src="/Logo Square - Icon Color - BG Pink.jpg"
+                  alt="CoconutRoads"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
                 <span className="text-base font-semibold">CoconutRoads</span>
               </a>
             </SidebarMenuButton>
