@@ -105,13 +105,14 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Management</h1>
-        <p className="text-gray-600">Manage motorhome rental bookings</p>
-      </div>
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <div className="px-4 lg:px-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold mb-1">Booking Management</h1>
+          <p className="text-sm text-muted-foreground">Manage motorhome rental bookings</p>
+        </div>
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-6">
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="all">
             All ({bookings.length})
@@ -205,6 +206,7 @@ export default function BookingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   )
 }
