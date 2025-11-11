@@ -108,7 +108,7 @@ export default function BookingDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="p-8 text-center text-gray-600">Loading booking details...</div>
         </div>
@@ -118,11 +118,11 @@ export default function BookingDetailPage() {
 
   if (!booking) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="p-8 text-center text-gray-600">Booking not found.</div>
           <div className="text-center">
-            <Button onClick={() => router.push('/')}>
+            <Button onClick={() => router.push('/bookings')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Bookings
             </Button>
@@ -133,11 +133,11 @@ export default function BookingDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="p-6">
       <div className="max-w-4xl mx-auto">
         <Button
           variant="ghost"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/bookings')}
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

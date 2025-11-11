@@ -41,44 +41,69 @@ src/
 ├── app/                    # Next.js App Router pages
 │   ├── page.tsx           # Admin dashboard (booking list)
 │   ├── [id]/page.tsx      # Individual booking detail page
-│   ├── layout.tsx         # Root layout
+│   ├── login/page.tsx     # Login page
+│   ├── layout.tsx         # Root layout with AuthProvider
 │   └── globals.css        # Global styles
 ├── components/
-│   └── ui/                # shadcn/ui components
+│   ├── ui/                # shadcn/ui components
+│   ├── login-form.tsx     # Login form with Supabase auth
+│   └── auth-provider.tsx  # Auth context wrapper with logout
 ├── lib/
-│   ├── supabase.ts        # Supabase client + TypeScript types
+│   ├── supabase.ts        # Legacy Supabase client + TypeScript types
+│   ├── supabase-client.ts # Browser Supabase client (SSR-compatible)
+│   ├── supabase-server.ts # Server Supabase client (SSR-compatible)
 │   └── utils.ts           # Utility functions (cn, etc.)
+└── proxy.ts               # Next.js 16 request proxy for route protection
 ```
 
 ### Key Architectural Patterns
 
-1. **Data Layer** (`src/lib/supabase.ts`):
-   - Centralized Supabase client configuration
-   - TypeScript interfaces for database tables: `Booking`, `Van`, `BookingStatusHistory`
+1. **Authentication** (`src/proxy.ts`, `src/components/auth-provider.tsx`):
+   - **Route Protection**: `src/proxy.ts` uses Next.js 16 proxy to protect all admin routes
+   - Redirects unauthenticated users to `/login`
+   - Redirects authenticated users away from `/login` to dashboard
+   - **Login**: Email/password authentication via Supabase Auth at `/login`
+   - **Session Management**: Handled via Supabase Auth cookies with `@supabase/ssr`
+   - **Logout**: Available in header on all protected pages via `AuthProvider`
+   - Admin users must be created in Supabase Dashboard → Authentication → Users
+
+2. **Data Layer**:
+   - `src/lib/supabase.ts` - Legacy client + TypeScript interfaces for `Booking`, `Van`, `BookingStatusHistory`
+   - `src/lib/supabase-client.ts` - Browser client using `@supabase/ssr` (use in client components)
+   - `src/lib/supabase-server.ts` - Server client using `@supabase/ssr` (use in server components/actions)
    - Requires environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-2. **Database Schema**:
+3. **Database Schema**:
    - `bookings` table: Core booking records with status workflow (pending → approved/rejected/cancelled/completed)
    - `vans` table: Van inventory management
    - `booking_status_history` table: Audit trail for status changes
    - All tables include `created_at` and `updated_at` timestamps
 
-3. **Routing**:
-   - `/` - Admin dashboard showing all bookings in a table view
-   - `/[id]` - Individual booking detail page with approve/reject actions
-   - All pages are client-side rendered (use 'use client')
+4. **Routing**:
+   - `/login` - Public login page (redirects to `/` if already authenticated)
+   - `/` - Protected admin dashboard showing all bookings in a table view
+   - `/[id]` - Protected booking detail page with approve/reject actions
+   - All pages use `'use client'` directive for React hooks and interactivity
 
-4. **Booking Status Workflow**:
+5. **Booking Status Workflow**:
    - **pending**: Initial state when booking is submitted
    - **approved**: Admin approved the booking
    - **rejected**: Admin rejected the booking (with optional admin_notes)
    - **cancelled**: Customer cancelled (planned, not yet implemented)
    - **completed**: Trip finished (planned, not yet implemented)
 
-5. **Component Library**:
+6. **Component Library**:
    - Uses shadcn/ui components with Radix UI primitives
    - Component configuration in `components.json`
-   - Pre-installed: Badge, Button, Card, Dialog, Table, Tabs
+   - Pre-installed: Badge, Button, Card, Dialog, Input, Label, Table, Tabs
+   - **IMPORTANT - Tailwind CSS 4 Compatibility Issue**:
+     - This project uses Tailwind CSS 4 (CSS-first configuration)
+     - `npx shadcn@latest add` may incorrectly transform components to use old Tailwind v3 syntax
+     - **Issue**: CLI changes `w-(--sidebar-width)` (v4 syntax with parentheses) to `w-[--sidebar-width]` (v3 syntax with brackets)
+     - **Solution**: For Tailwind v4 projects, copy components directly from the shadcn reference repo instead of using the CLI
+     - **Reference Repo**: `/Users/bryan/repos/playground/ui/apps/v4/registry/new-york-v4/`
+     - After copying, update imports from `@/registry/new-york-v4/...` to `@/...`
+     - Check for Tailwind v4 syntax: CSS custom properties should use `w-(--var-name)` NOT `w-[--var-name]`
 
 ## Code Style
 
@@ -93,20 +118,41 @@ The project uses Prettier with these settings:
 
 ## Important Implementation Details
 
-1. **Path Aliases**: Use `@/*` to import from `src/`, e.g., `import { supabase } from '@/lib/supabase'`
+1. **Next.js 16 Specifics**:
+   - **CRITICAL**: This project uses Next.js 16. DO NOT use features from Next.js 15 or earlier versions
+   - Use `proxy.ts` (NOT `middleware.ts`) for request interception
+   - The proxy function must be exported as `export function proxy(request: NextRequest)` or as default export
+   - Proxy runs on Node.js runtime (not Edge Runtime)
+   - Example proxy.ts structure:
+     ```typescript
+     import { NextResponse, NextRequest } from 'next/server'
 
-2. **Image Configuration**: Next.js is configured to allow images from `a.storyblok.com` (though not currently used)
+     export function proxy(request: NextRequest) {
+       return NextResponse.next()
+     }
 
-3. **Client Components**: Both main pages (`page.tsx` and `[id]/page.tsx`) use `'use client'` directive because they need React hooks and interactivity
+     export const config = {
+       matcher: '/protected/:path*'
+     }
+     ```
 
-4. **Authentication**: Currently NO authentication is implemented. This is a major TODO item - the admin routes are publicly accessible
+2. **Path Aliases**: Use `@/*` to import from `src/`, e.g., `import { supabase } from '@/lib/supabase'`
+
+3. **Image Configuration**: Next.js is configured to allow images from `a.storyblok.com` (though not currently used)
+
+4. **Client Components**: Pages use `'use client'` directive when they need React hooks and interactivity
 
 5. **Type Safety**: TypeScript interfaces in `src/lib/supabase.ts` define the shape of database records. Update these when the database schema changes
+
+6. **Supabase Client Usage**:
+   - **Client components**: Import from `@/lib/supabase-client` and call `createClient()`
+   - **Server components/actions**: Import from `@/lib/supabase-server` and call `await createClient()`
+   - The SSR-compatible clients handle cookie-based session management automatically
 
 ## Known TODOs and Roadmap
 
 High-priority items from TODO.md:
-- Authentication to protect admin routes (most critical security concern)
+- ✅ ~~Authentication to protect admin routes~~ - COMPLETED (Supabase Auth with proxy.ts)
 - Email notifications for booking confirmations and status changes
 - Van management interface
 - Calendar view with availability checking and conflict detection

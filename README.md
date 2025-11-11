@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CoconutRoads Admin Dashboard
+
+A booking management dashboard for CoconutRoads van rental service in Thailand. Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, and Supabase.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI**: React 19, Tailwind CSS 4, shadcn/ui
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Package Manager**: pnpm
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ installed
+- pnpm installed (`npm install -g pnpm`)
+- Supabase account and project
+
+### Installation
+
+1. Clone the repository and install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Set up environment variables:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env` file in the root directory with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Setting Up Authentication
+
+The admin dashboard is protected with Supabase authentication. To create an admin user:
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Authentication** → **Users**
+3. Click **Add user** → **Create new user**
+4. Enter an email and password for the admin account
+5. Click **Create user**
+
+Alternatively, use the Supabase SQL Editor to create a user:
+
+```sql
+-- Create an admin user
+INSERT INTO auth.users (email, encrypted_password, email_confirmed_at)
+VALUES (
+  'admin@coconutroads.com',
+  crypt('your-secure-password', gen_salt('bf')),
+  now()
+);
+```
+
+### Running the Development Server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) - you'll be redirected to the login page.
+
+### Building for Production
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── page.tsx           # Admin dashboard (booking list)
+│   ├── [id]/page.tsx      # Individual booking details
+│   ├── login/page.tsx     # Login page
+│   └── layout.tsx         # Root layout with auth provider
+├── components/
+│   ├── ui/                # shadcn/ui components
+│   ├── login-form.tsx     # Login form component
+│   └── auth-provider.tsx  # Auth context with logout
+├── lib/
+│   ├── supabase.ts        # Legacy Supabase client + types
+│   ├── supabase-client.ts # Browser Supabase client
+│   ├── supabase-server.ts # Server Supabase client
+│   └── utils.ts           # Utility functions
+└── proxy.ts               # Next.js 16 request proxy (auth protection)
+```
+
+## Authentication System
+
+This project uses a simple email/password authentication system via Supabase Auth:
+
+- **Route Protection**: The `src/proxy.ts` file (Next.js 16 proxy) protects all routes except `/login`
+- **Login**: Users authenticate via `/login` with email/password
+- **Session Management**: Handled automatically by Supabase Auth cookies
+- **Logout**: Available in the header on all protected pages
+
+## Key Features
+
+- Protected admin routes with Supabase authentication
+- Booking list view with status badges
+- Individual booking detail pages
+- Approve/reject booking functionality
+- Responsive design with Tailwind CSS
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js 16 Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [shadcn/ui Components](https://ui.shadcn.com)
+- [Tailwind CSS](https://tailwindcss.com/docs)
