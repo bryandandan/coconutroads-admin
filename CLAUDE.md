@@ -161,6 +161,18 @@ High-priority items from TODO.md:
 
 Refer to `TODO.md` for the complete roadmap organized by category.
 
+## Testing
+
+### Playwright E2E Tests
+
+The project uses Playwright for end-to-end testing with the MCP Playwright integration.
+
+**Test Credentials** (for development/testing environment):
+- Email: `contact@coconutroads.com`
+- Password: `123456`
+
+These credentials are for local testing and automated E2E tests only. Do not use in production.
+
 ## Database Operations
 
 When working with Supabase:
@@ -168,3 +180,21 @@ When working with Supabase:
 - Use `.single()` when expecting one result, `.select()` for multiple
 - Status updates should include `approved_by`, `approved_at`, and optional `admin_notes`
 - Consider implementing status history tracking using the `booking_status_history` table (currently not used in code)
+
+### Understanding Database Structure
+
+You have access to tools for inspecting the database schema:
+
+1. **MCP Supabase Tools** (preferred for quick inspection):
+   - `mcp__supabase__list_tables` - Lists all tables in the database (defaults to `public` schema)
+   - `mcp__supabase__list_migrations` - Shows migration history
+   - `mcp__supabase__execute_sql` - Run SQL queries to inspect schema details
+   - Example: Use `execute_sql` with queries like `SELECT * FROM information_schema.columns WHERE table_name = 'bookings'` to see column details
+
+2. **Supabase CLI** (for comprehensive schema inspection):
+   - The project includes Supabase CLI configuration in `supabase/` directory
+   - Use `pnpm supabase db inspect` to view database schema
+   - Use `pnpm supabase migration list` to see migration history
+   - Use `pnpm supabase db diff` to compare local and remote schemas
+
+Use these tools when you need to understand table structures, relationships, constraints, or available columns before implementing database operations.

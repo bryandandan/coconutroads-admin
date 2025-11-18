@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Image from 'next/image'
-import { IconCalendar, IconDashboard } from '@tabler/icons-react'
+import { IconCalendar, IconDashboard, IconTruck } from '@tabler/icons-react'
 
 import { NavMain } from '@/components/nav-main'
 import { NavUser } from '@/components/nav-user'
@@ -32,6 +32,11 @@ const data = {
       title: 'Bookings',
       url: '/bookings',
       icon: IconCalendar
+    },
+    {
+      title: 'Campervans',
+      url: '/campervans',
+      icon: IconTruck
     }
   ]
 }

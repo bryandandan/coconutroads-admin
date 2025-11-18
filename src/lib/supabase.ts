@@ -10,9 +10,7 @@ export interface Van {
   id: string
   name: string
   description: string | null
-  capacity: number
-  price_per_day: number
-  image_url: string | null
+  purchased_at: string | null
   is_active: boolean
   created_at: string
   updated_at: string

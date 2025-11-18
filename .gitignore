@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 .mcp.json
+.playwright-mcp
 
 # vscode
 .vscode
@@ -43,3 +44,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase
+supabase/.temp

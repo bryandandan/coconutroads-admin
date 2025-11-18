@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { supabase, type Booking } from '@/lib/supabase'
+import { supabase, type Booking, type Van } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Calendar, Mail, Phone, Globe, User, Clock, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Mail, Phone, Globe, User, Clock, ArrowLeft, CheckCircle, XCircle, Trash2, Car } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
 export default function BookingDetailPage() {
   const router = useRouter()
@@ -22,13 +40,16 @@ export default function BookingDetailPage() {
   const bookingId = params.id as string
 
   const [booking, setBooking] = useState<Booking | null>(null)
+  const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [rejectNotes, setRejectNotes] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (bookingId) {
       fetchBooking()
+      fetchVans()
     }
   }, [bookingId])
 
@@ -47,6 +68,21 @@ export default function BookingDetailPage() {
       console.error('Error fetching booking:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchVans = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vans')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true })
+
+      if (error) throw error
+      setVans(data || [])
+    } catch (error) {
+      console.error('Error fetching vans:', error)
     }
   }
 
@@ -74,6 +110,44 @@ export default function BookingDetailPage() {
     } catch (error) {
       console.error('Error updating booking:', error)
       alert('Failed to update booking status')
+    }
+  }
+
+  const updateVanAssignment = async (vanId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          van_id: vanId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', bookingId)
+
+      if (error) throw error
+
+      // Refresh booking
+      fetchBooking()
+    } catch (error) {
+      console.error('Error updating van assignment:', error)
+      alert('Failed to update van assignment')
+    }
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId)
+
+      if (error) throw error
+
+      router.push('/bookings')
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      alert('Failed to delete booking. Please try again.')
+      setIsDeleting(false)
     }
   }
 
@@ -106,6 +180,12 @@ export default function BookingDetailPage() {
     return diffDays
   }
 
+  const getAssignedVanName = () => {
+    if (!booking?.van_id) return null
+    const van = vans.find(v => v.id === booking.van_id)
+    return van?.name || 'Unknown Van'
+  }
+
   if (loading) {
     return (
       <div className="p-6">
@@ -135,14 +215,45 @@ export default function BookingDetailPage() {
   return (
     <div className="p-6">
       <div className="max-w-4xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => router.push('/bookings')}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Bookings
-        </Button>
+        <div className="mb-6 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/bookings')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Bookings
+          </Button>
+
+          {process.env.NODE_ENV !== 'production' && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isDeleting}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Booking
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the booking for
+                    <strong> {booking.surname_and_name}</strong> from the system.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
 
         <div className="mb-6">
           <div className="flex justify-between items-start mb-2">
@@ -157,6 +268,39 @@ export default function BookingDetailPage() {
         </div>
 
         <div className="space-y-6">
+          {/* Van Assignment */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Van Assignment</CardTitle>
+              <CardDescription>Assign a campervan to this booking</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-3">
+                <Car className="h-5 w-5 text-gray-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Assigned Van</p>
+                  <Select value={booking.van_id || ''} onValueChange={value => updateVanAssignment(value || null)}>
+                    <SelectTrigger className="w-full max-w-md">
+                      <SelectValue placeholder="Select a van..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No van assigned</SelectItem>
+                      {vans.map(van => (
+                        <SelectItem key={van.id} value={van.id}>
+                          {van.name}
+                          {van.description && ` - ${van.description}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {booking.van_id && (
+                    <p className="text-sm text-gray-600 mt-2">Currently assigned: {getAssignedVanName()}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Customer Information */}
           <Card>
             <CardHeader>

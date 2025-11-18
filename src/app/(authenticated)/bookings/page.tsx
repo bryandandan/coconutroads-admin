@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, type Booking } from '@/lib/supabase'
+import { supabase, type Booking, type Van } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,11 +13,13 @@ import { Eye } from 'lucide-react'
 export default function BookingsPage() {
   const router = useRouter()
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
 
   useEffect(() => {
     fetchBookings()
+    fetchVans()
   }, [filter])
 
   // Set up real-time subscription for automatic updates
@@ -67,6 +69,21 @@ export default function BookingsPage() {
     }
   }
 
+  const fetchVans = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vans')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true })
+
+      if (error) throw error
+      setVans(data || [])
+    } catch (error) {
+      console.error('Error fetching vans:', error)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -102,6 +119,12 @@ export default function BookingsPage() {
     const diffTime = Math.abs(end.getTime() - start.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays
+  }
+
+  const getVanName = (vanId: string | null) => {
+    if (!vanId) return '-'
+    const van = vans.find(v => v.id === vanId)
+    return van?.name || 'Unknown'
   }
 
   return (
@@ -145,6 +168,7 @@ export default function BookingsPage() {
                     <TableRow>
                       <TableHead>Customer</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Van</TableHead>
                       <TableHead>Departure</TableHead>
                       <TableHead>Return</TableHead>
                       <TableHead>Duration</TableHead>
@@ -171,6 +195,9 @@ export default function BookingsPage() {
                           >
                             {booking.email}
                           </a>
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {getVanName(booking.van_id)}
                         </TableCell>
                         <TableCell>{formatDate(booking.departure_date)}</TableCell>
                         <TableCell>{formatDate(booking.return_date)}</TableCell>
