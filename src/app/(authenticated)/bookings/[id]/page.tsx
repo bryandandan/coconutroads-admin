@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { supabase, type Booking, type Van } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
+import type { Booking, Van } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,7 @@ export default function BookingDetailPage() {
   const router = useRouter()
   const params = useParams()
   const bookingId = params.id as string
+  const supabase = createClient()
 
   const [booking, setBooking] = useState<Booking | null>(null)
   const [vans, setVans] = useState<Van[]>([])
@@ -114,22 +116,37 @@ export default function BookingDetailPage() {
   }
 
   const updateVanAssignment = async (vanId: string | null) => {
+    if (!booking) return
+
+    // Optimistically update local state
+    const previousVanId = booking.van_id
+    const updatedAt = new Date().toISOString()
+
+    setBooking({
+      ...booking,
+      van_id: vanId,
+      updated_at: updatedAt
+    })
+
     try {
       const { error } = await supabase
         .from('bookings')
         .update({
           van_id: vanId,
-          updated_at: new Date().toISOString()
+          updated_at: updatedAt
         })
         .eq('id', bookingId)
 
       if (error) throw error
-
-      // Refresh booking
-      fetchBooking()
     } catch (error) {
       console.error('Error updating van assignment:', error)
       alert('Failed to update van assignment')
+
+      // Revert on error
+      setBooking({
+        ...booking,
+        van_id: previousVanId
+      })
     }
   }
 
@@ -178,12 +195,6 @@ export default function BookingDetailPage() {
     const diffTime = Math.abs(end.getTime() - start.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays
-  }
-
-  const getAssignedVanName = () => {
-    if (!booking?.van_id) return null
-    const van = vans.find(v => v.id === booking.van_id)
-    return van?.name || 'Unknown Van'
   }
 
   if (loading) {
@@ -279,12 +290,12 @@ export default function BookingDetailPage() {
                 <Car className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-700 mb-2">Assigned Van</p>
-                  <Select value={booking.van_id || ''} onValueChange={value => updateVanAssignment(value || null)}>
+                  <Select value={booking.van_id || 'unassigned'} onValueChange={value => updateVanAssignment(value === 'unassigned' ? null : value)}>
                     <SelectTrigger className="w-full max-w-md">
                       <SelectValue placeholder="Select a van..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No van assigned</SelectItem>
+                      <SelectItem value="unassigned">No van assigned</SelectItem>
                       {vans.map(van => (
                         <SelectItem key={van.id} value={van.id}>
                           {van.name}
@@ -293,9 +304,6 @@ export default function BookingDetailPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {booking.van_id && (
-                    <p className="text-sm text-gray-600 mt-2">Currently assigned: {getAssignedVanName()}</p>
-                  )}
                 </div>
               </div>
             </CardContent>

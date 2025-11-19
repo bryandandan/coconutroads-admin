@@ -68,9 +68,9 @@ src/
    - Admin users must be created in Supabase Dashboard → Authentication → Users
 
 2. **Data Layer**:
-   - `src/lib/supabase.ts` - Legacy client + TypeScript interfaces for `Booking`, `Van`, `BookingStatusHistory`
-   - `src/lib/supabase-client.ts` - Browser client using `@supabase/ssr` (use in client components)
-   - `src/lib/supabase-server.ts` - Server client using `@supabase/ssr` (use in server components/actions)
+   - `src/lib/supabase.ts` - **DEPRECATED CLIENT** - Contains TypeScript interfaces (`Booking`, `Van`, `BookingStatusHistory`). **NEVER import the `supabase` client from this file** - it doesn't handle cookie-based authentication and will cause data operations to fail silently. Only import TypeScript types from here.
+   - `src/lib/supabase-client.ts` - **USE THIS for client components** (components with `'use client'` directive that run in the browser). Properly handles auth cookies.
+   - `src/lib/supabase-server.ts` - **USE THIS for server components** (no `'use client'` directive, runs on server). Properly handles auth cookies.
    - Requires environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 3. **Database Schema**:
@@ -145,9 +145,24 @@ The project uses Prettier with these settings:
 5. **Type Safety**: TypeScript interfaces in `src/lib/supabase.ts` define the shape of database records. Update these when the database schema changes
 
 6. **Supabase Client Usage**:
-   - **Client components**: Import from `@/lib/supabase-client` and call `createClient()`
-   - **Server components/actions**: Import from `@/lib/supabase-server` and call `await createClient()`
-   - The SSR-compatible clients handle cookie-based session management automatically
+   - **CRITICAL**: The legacy `supabase` client from `@/lib/supabase` does NOT handle authentication properly. Using it will cause database operations to fail silently or not persist data.
+   - **Client components** (with `'use client'` directive):
+     ```typescript
+     import { createClient } from '@/lib/supabase-client'
+     import type { Booking, Van } from '@/lib/supabase' // Types only
+
+     const supabase = createClient()
+     const { data, error } = await supabase.from('bookings').select('*')
+     ```
+   - **Server components/actions** (no `'use client'` directive):
+     ```typescript
+     import { createClient } from '@/lib/supabase-server'
+     import type { Booking, Van } from '@/lib/supabase' // Types only
+
+     const supabase = await createClient()
+     const { data, error } = await supabase.from('bookings').select('*')
+     ```
+   - The SSR-compatible clients handle cookie-based session management automatically. The distinction is about where the code runs (browser vs server), NOT about admin vs user access.
 
 ## Known TODOs and Roadmap
 
