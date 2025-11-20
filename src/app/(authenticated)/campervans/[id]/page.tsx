@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { ArrowLeft, Trash2, Edit2, X, Check } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,9 @@ export default function CampervanDetailPage() {
   const [bookingsLoading, setBookingsLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [editedDescription, setEditedDescription] = useState('')
+  const [isSavingDescription, setIsSavingDescription] = useState(false)
 
   useEffect(() => {
     if (vanId) {
@@ -118,6 +122,39 @@ export default function CampervanDetailPage() {
       alert('Failed to update van status. Please try again.')
     } finally {
       setIsUpdatingStatus(false)
+    }
+  }
+
+  const handleEditDescription = () => {
+    setEditedDescription(van?.description || '')
+    setIsEditingDescription(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingDescription(false)
+    setEditedDescription('')
+  }
+
+  const handleSaveDescription = async () => {
+    if (!van) return
+
+    setIsSavingDescription(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('vans')
+        .update({ description: editedDescription })
+        .eq('id', vanId)
+
+      if (error) throw error
+
+      setVan({ ...van, description: editedDescription })
+      setIsEditingDescription(false)
+    } catch (error) {
+      console.error('Error updating van description:', error)
+      alert('Failed to update van description. Please try again.')
+    } finally {
+      setIsSavingDescription(false)
     }
   }
 
@@ -251,12 +288,56 @@ export default function CampervanDetailPage() {
                 </div>
               </div>
 
-              {van.description && (
-                <div className="pt-2">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Description</p>
-                  <p className="text-gray-900 whitespace-pre-wrap">{van.description}</p>
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-700">Description</p>
+                  {!isEditingDescription && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEditDescription}
+                      className="h-8"
+                    >
+                      <Edit2 className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
-              )}
+                {isEditingDescription ? (
+                  <div className="space-y-3">
+                    <Textarea
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      placeholder="Enter van description..."
+                      className="min-h-[120px] resize-none"
+                      disabled={isSavingDescription}
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                        disabled={isSavingDescription}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveDescription}
+                        disabled={isSavingDescription}
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        {isSavingDescription ? 'Saving...' : 'Save'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-900 whitespace-pre-wrap">
+                    {van.description || <span className="text-gray-400 italic">No description added yet</span>}
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
