@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Eye, Trash2 } from 'lucide-react'
+import { AddBookingModal } from '@/components/add-booking-modal'
 
 export default function BookingsPage() {
   const router = useRouter()
@@ -150,7 +151,8 @@ export default function BookingsPage() {
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         <div className="px-4 lg:px-6">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <TabsList className="grid grid-cols-4 w-auto lg:w-[500px]">
           <TabsTrigger value="all">
             All ({bookings.length})
           </TabsTrigger>
@@ -164,6 +166,8 @@ export default function BookingsPage() {
             Rejected ({rejectedCount})
           </TabsTrigger>
         </TabsList>
+        <AddBookingModal onBookingAdded={fetchBookings} />
+      </div>
 
         <TabsContent value={filter}>
           <Card>

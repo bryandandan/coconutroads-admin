@@ -7,6 +7,7 @@ import type { Van } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Eye, Trash2 } from 'lucide-react'
@@ -16,6 +17,7 @@ export default function CampervansPage() {
   const router = useRouter()
   const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const isDev = process.env.NODE_ENV !== 'production'
 
   const fetchVans = async () => {
@@ -73,24 +75,41 @@ export default function CampervansPage() {
   const activeVans = vans.filter(v => v.is_active)
   const inactiveVans = vans.filter(v => !v.is_active)
 
+  const filteredVans = vans.filter(van => {
+    if (filter === 'all') return true
+    if (filter === 'active') return van.is_active
+    if (filter === 'inactive') return !van.is_active
+    return true
+  })
+
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         <div className="px-4 lg:px-6">
-        <div className="mb-6 flex items-start justify-between">
-          <div className="text-sm text-muted-foreground">
-            {activeVans.length} active, {inactiveVans.length} inactive
-          </div>
-          <AddVanModal onVanAdded={fetchVans} />
-        </div>
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-4">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <TabsList className="grid grid-cols-3 w-auto lg:w-[400px]">
+          <TabsTrigger value="all">
+            All ({vans.length})
+          </TabsTrigger>
+          <TabsTrigger value="active">
+            Active ({activeVans.length})
+          </TabsTrigger>
+          <TabsTrigger value="inactive">
+            Inactive ({inactiveVans.length})
+          </TabsTrigger>
+        </TabsList>
+        <AddVanModal onVanAdded={fetchVans} />
+      </div>
 
+        <TabsContent value={filter}>
         <Card>
           <CardContent className="p-0">
             {loading ? (
               <div className="p-8 text-center text-gray-600">
                 Loading campervans...
               </div>
-            ) : vans.length === 0 ? (
+            ) : filteredVans.length === 0 ? (
               <div className="p-8 text-center text-gray-600">
                 No campervans found.
               </div>
@@ -107,7 +126,7 @@ export default function CampervansPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vans.map((van) => (
+                  {filteredVans.map((van) => (
                     <TableRow
                       key={van.id}
                       className="hover:bg-gray-50"
@@ -182,6 +201,8 @@ export default function CampervansPage() {
             )}
           </CardContent>
         </Card>
+        </TabsContent>
+      </Tabs>
       </div>
     </div>
     </TooltipProvider>

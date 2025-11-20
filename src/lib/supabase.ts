@@ -23,7 +23,6 @@ export interface Booking {
   email: string
   birth_date: string
   telephone: string
-  nationality: string
   departure_date: string
   return_date: string
   requests: string | null
