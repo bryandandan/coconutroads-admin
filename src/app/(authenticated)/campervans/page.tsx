@@ -8,13 +8,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Eye } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Eye, Trash2 } from 'lucide-react'
 import { AddVanModal } from '@/components/add-van-modal'
 
 export default function CampervansPage() {
   const router = useRouter()
   const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
+  const isDev = process.env.NODE_ENV !== 'production'
 
   const fetchVans = async () => {
     setLoading(true)
@@ -46,18 +48,38 @@ export default function CampervansPage() {
     })
   }
 
+  const handleDelete = async (vanId: string, vanName: string) => {
+    if (!confirm(`Are you sure you want to delete ${vanName}? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('vans')
+        .delete()
+        .eq('id', vanId)
+
+      if (error) throw error
+
+      // Refresh the list
+      fetchVans()
+    } catch (error) {
+      console.error('Error deleting van:', error)
+      alert('Failed to delete van. Please try again.')
+    }
+  }
+
   const activeVans = vans.filter(v => v.is_active)
   const inactiveVans = vans.filter(v => !v.is_active)
 
   return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <div className="px-4 lg:px-6">
+    <TooltipProvider>
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold mb-1">Campervan Management</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your fleet of campervans ({activeVans.length} active, {inactiveVans.length} inactive)
-            </p>
+          <div className="text-sm text-muted-foreground">
+            {activeVans.length} active, {inactiveVans.length} inactive
           </div>
           <AddVanModal onVanAdded={fetchVans} />
         </div>
@@ -79,6 +101,7 @@ export default function CampervansPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Purchased</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -105,20 +128,52 @@ export default function CampervansPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-gray-600">
+                        {van.purchased_at ? formatDate(van.purchased_at) : '-'}
+                      </TableCell>
+                      <TableCell className="text-gray-600">
                         {formatDate(van.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/campervans/${van.id}`)
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  router.push(`/campervans/${van.id}`)
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          {isDev && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDelete(van.id, van.name)
+                                  }}
+                                  className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Delete</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -129,5 +184,6 @@ export default function CampervansPage() {
         </Card>
       </div>
     </div>
+    </TooltipProvider>
   )
 }

@@ -143,8 +143,8 @@ export default function CampervanDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
           <div className="p-8 text-center text-gray-600">Loading campervan details...</div>
         </div>
       </div>
@@ -153,8 +153,8 @@ export default function CampervanDetailPage() {
 
   if (!van) {
     return (
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
           <div className="p-8 text-center text-gray-600">Campervan not found.</div>
           <div className="text-center">
             <Button onClick={() => router.push('/campervans')}>
@@ -168,8 +168,8 @@ export default function CampervanDetailPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <div className="px-4 lg:px-6">
         <div className="mb-6 flex items-center justify-between">
           <Button
             variant="ghost"

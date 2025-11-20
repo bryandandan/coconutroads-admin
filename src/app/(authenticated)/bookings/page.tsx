@@ -2,25 +2,29 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, type Booking, type Van } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
+import type { Booking, Van } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Eye } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Eye, Trash2 } from 'lucide-react'
 
 export default function BookingsPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const isDev = process.env.NODE_ENV !== 'production'
 
   useEffect(() => {
     fetchBookings()
     fetchVans()
-  }, [filter])
+  }, [])
 
   // Set up real-time subscription for automatic updates
   useEffect(() => {
@@ -44,21 +48,15 @@ export default function BookingsPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [filter])
+  }, [])
 
   const fetchBookings = async () => {
     setLoading(true)
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('bookings')
         .select('*')
         .order('created_at', { ascending: false })
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter)
-      }
-
-      const { data, error } = await query
 
       if (error) throw error
       setBookings(data || [])
@@ -127,14 +125,30 @@ export default function BookingsPage() {
     return van?.name || 'Unknown'
   }
 
-  return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <div className="px-4 lg:px-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold mb-1">Booking Management</h1>
-          <p className="text-sm text-muted-foreground">Manage motorhome rental bookings</p>
-        </div>
+  const handleDelete = async (bookingId: string, customerName: string) => {
+    if (!confirm(`Are you sure you want to delete the booking for ${customerName}? This action cannot be undone.`)) {
+      return
+    }
 
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId)
+
+      if (error) throw error
+
+      // The real-time subscription will automatically update the list
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      alert('Failed to delete booking. Please try again.')
+    }
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="all">
@@ -213,16 +227,46 @@ export default function BookingsPage() {
                           {formatDate(booking.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/bookings/${booking.id}`)
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    router.push(`/bookings/${booking.id}`)
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            {isDev && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDelete(booking.id, booking.surname_and_name)
+                                    }}
+                                    className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delete</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -235,5 +279,6 @@ export default function BookingsPage() {
       </Tabs>
       </div>
     </div>
+    </TooltipProvider>
   )
 }

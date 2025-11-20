@@ -9,10 +9,8 @@ export default function DashboardPage() {
   const router = useRouter()
 
   return (
-    <div className="p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
-
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <div className="px-4 lg:px-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => router.push('/bookings')}>
             <CardHeader>

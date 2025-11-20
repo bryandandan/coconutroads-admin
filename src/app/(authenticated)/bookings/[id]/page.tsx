@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
-import type { Booking, Van } from '@/lib/supabase'
+import type { Booking, Van, BookingStatusHistory } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,7 @@ export default function BookingDetailPage() {
 
   const [booking, setBooking] = useState<Booking | null>(null)
   const [vans, setVans] = useState<Van[]>([])
+  const [statusHistory, setStatusHistory] = useState<BookingStatusHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [rejectNotes, setRejectNotes] = useState('')
@@ -52,6 +53,7 @@ export default function BookingDetailPage() {
     if (bookingId) {
       fetchBooking()
       fetchVans()
+      fetchStatusHistory()
     }
   }, [bookingId])
 
@@ -88,25 +90,61 @@ export default function BookingDetailPage() {
     }
   }
 
+  const fetchStatusHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('booking_status_history')
+        .select('*')
+        .eq('booking_id', bookingId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setStatusHistory(data || [])
+    } catch (error) {
+      console.error('Error fetching status history:', error)
+    }
+  }
+
   const updateBookingStatus = async (
     newStatus: 'approved' | 'rejected',
     adminNotes?: string
   ) => {
+    if (!booking) return
+
     try {
-      const { error } = await supabase
+      const oldStatus = booking.status
+      const changedBy = 'contact@coconutroads.com'
+      const changedAt = new Date().toISOString()
+
+      // Update booking status
+      const { error: bookingError } = await supabase
         .from('bookings')
         .update({
           status: newStatus,
-          approved_by: 'Admin',
-          approved_at: new Date().toISOString(),
+          approved_by: changedBy,
+          approved_at: changedAt,
           admin_notes: adminNotes || null
         })
         .eq('id', bookingId)
 
-      if (error) throw error
+      if (bookingError) throw bookingError
 
-      // Refresh booking
+      // Create status history record
+      const { error: historyError } = await supabase
+        .from('booking_status_history')
+        .insert({
+          booking_id: bookingId,
+          old_status: oldStatus,
+          new_status: newStatus,
+          changed_by: changedBy,
+          notes: adminNotes || null
+        })
+
+      if (historyError) throw historyError
+
+      // Refresh booking and history
       fetchBooking()
+      fetchStatusHistory()
       setIsDialogOpen(false)
       setRejectNotes('')
     } catch (error) {
@@ -199,8 +237,8 @@ export default function BookingDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
           <div className="p-8 text-center text-gray-600">Loading booking details...</div>
         </div>
       </div>
@@ -209,8 +247,8 @@ export default function BookingDetailPage() {
 
   if (!booking) {
     return (
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
           <div className="p-8 text-center text-gray-600">Booking not found.</div>
           <div className="text-center">
             <Button onClick={() => router.push('/bookings')}>
@@ -224,8 +262,8 @@ export default function BookingDetailPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <div className="px-4 lg:px-6">
         <div className="mb-6 flex items-center justify-between">
           <Button
             variant="ghost"
@@ -291,7 +329,7 @@ export default function BookingDetailPage() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-700 mb-2">Assigned Van</p>
                   <Select value={booking.van_id || 'unassigned'} onValueChange={value => updateVanAssignment(value === 'unassigned' ? null : value)}>
-                    <SelectTrigger className="w-full max-w-md">
+                    <SelectTrigger className="w-full max-w-xs">
                       <SelectValue placeholder="Select a van..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -299,7 +337,6 @@ export default function BookingDetailPage() {
                       {vans.map(van => (
                         <SelectItem key={van.id} value={van.id}>
                           {van.name}
-                          {van.description && ` - ${van.description}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -428,6 +465,69 @@ export default function BookingDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-900 whitespace-pre-wrap">{booking.admin_notes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Status History */}
+          {statusHistory.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Status History</CardTitle>
+                <CardDescription>
+                  Timeline of status changes for this booking
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {statusHistory.map((history, index) => (
+                    <div
+                      key={history.id}
+                      className="flex gap-4 pb-4 border-b last:border-b-0 last:pb-0"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full ${
+                          history.new_status === 'approved' ? 'bg-green-500' :
+                          history.new_status === 'rejected' ? 'bg-pink-500' :
+                          history.new_status === 'completed' ? 'bg-blue-500' :
+                          'bg-gray-400'
+                        }`} />
+                        {index < statusHistory.length - 1 && (
+                          <div className="w-0.5 h-full min-h-[40px] bg-gray-200 mt-1" />
+                        )}
+                      </div>
+                      <div className="flex-1 pt-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className={getStatusColor(history.new_status)}>
+                            {history.new_status.toUpperCase()}
+                          </Badge>
+                          {history.old_status && (
+                            <span className="text-sm text-gray-500">
+                              from <span className="font-medium">{history.old_status}</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1">
+                          {formatDate(history.created_at)} at{' '}
+                          {new Date(history.created_at).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {history.changed_by && (
+                          <p className="text-sm text-gray-500 mb-2">
+                            by {history.changed_by}
+                          </p>
+                        )}
+                        {history.notes && (
+                          <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                            {history.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
