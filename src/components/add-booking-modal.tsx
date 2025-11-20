@@ -34,7 +34,8 @@ export function AddBookingModal({ onBookingAdded }: AddBookingModalProps) {
   const [loading, setLoading] = useState(false)
   const [vans, setVans] = useState<Van[]>([])
   const [formData, setFormData] = useState({
-    surname_and_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     birth_date: '',
     telephone: '',
@@ -75,7 +76,8 @@ export function AddBookingModal({ onBookingAdded }: AddBookingModalProps) {
       const supabase = createClient()
       const { error } = await supabase.from('bookings').insert([
         {
-          surname_and_name: formData.surname_and_name,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           email: formData.email,
           birth_date: formData.birth_date,
           telephone: formData.telephone,
@@ -93,7 +95,8 @@ export function AddBookingModal({ onBookingAdded }: AddBookingModalProps) {
 
       // Reset form and close modal
       setFormData({
-        surname_and_name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         birth_date: '',
         telephone: '',
@@ -132,18 +135,33 @@ export function AddBookingModal({ onBookingAdded }: AddBookingModalProps) {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="surname_and_name">
-                  Full Name <span className="text-red-500">*</span>
+                <Label htmlFor="first_name">
+                  First Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="surname_and_name"
-                  value={formData.surname_and_name}
-                  onChange={(e) => setFormData({ ...formData, surname_and_name: e.target.value })}
-                  placeholder="John Doe"
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="John"
                   required
                 />
               </div>
 
+              <div className="grid gap-2">
+                <Label htmlFor="last_name">
+                  Last Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">
                   Email <span className="text-red-500">*</span>
@@ -154,6 +172,20 @@ export function AddBookingModal({ onBookingAdded }: AddBookingModalProps) {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="john@example.com"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="telephone">
+                  Telephone <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="telephone"
+                  type="tel"
+                  value={formData.telephone}
+                  onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                  placeholder="+66 123 456 789"
                   required
                 />
               </div>
@@ -174,17 +206,7 @@ export function AddBookingModal({ onBookingAdded }: AddBookingModalProps) {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="telephone">
-                  Telephone <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="telephone"
-                  type="tel"
-                  value={formData.telephone}
-                  onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                  placeholder="+66 123 456 789"
-                  required
-                />
+                {/* Empty space for alignment */}
               </div>
             </div>
 

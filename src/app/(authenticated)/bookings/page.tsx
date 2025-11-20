@@ -194,7 +194,7 @@ export default function BookingsPage() {
                         onClick={() => router.push(`/bookings/${booking.id}`)}
                       >
                         <TableCell className="font-medium">
-                          {booking.surname_and_name}
+                          {booking.first_name} {booking.last_name}
                         </TableCell>
                         <TableCell>
                           <a
@@ -249,7 +249,7 @@ export default function BookingsPage() {
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation()
-                                      handleDelete(booking.id, booking.surname_and_name)
+                                      handleDelete(booking.id, `${booking.first_name} ${booking.last_name}`)
                                     }}
                                     className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                                   >

@@ -377,7 +377,7 @@ export default function CampervanDetailPage() {
                         onClick={() => router.push(`/bookings/${booking.id}`)}
                       >
                         <TableCell className="font-medium">
-                          {booking.surname_and_name}
+                          {booking.first_name} {booking.last_name}
                         </TableCell>
                         <TableCell>{formatDate(booking.departure_date)}</TableCell>
                         <TableCell>{formatDate(booking.return_date)}</TableCell>

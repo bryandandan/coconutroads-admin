@@ -258,7 +258,7 @@ export default function BookingDetailPage() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete the booking for
-                    <strong> {booking.surname_and_name}</strong> from the system.
+                    <strong> {booking.first_name} {booking.last_name}</strong> from the system.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -330,7 +330,7 @@ export default function BookingDetailPage() {
                 <User className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Full Name</p>
-                  <p className="text-base text-gray-900">{booking.surname_and_name}</p>
+                  <p className="text-base text-gray-900">{booking.first_name} {booking.last_name}</p>
                 </div>
               </div>
 
@@ -558,7 +558,7 @@ export default function BookingDetailPage() {
           <DialogHeader>
             <DialogTitle>Change Booking Status</DialogTitle>
             <DialogDescription>
-              Are you sure you want to change this booking status to <strong>{selectedStatus}</strong> for {booking?.surname_and_name}? You can optionally provide notes below.
+              Are you sure you want to change this booking status to <strong>{selectedStatus}</strong> for {booking?.first_name} {booking?.last_name}? You can optionally provide notes below.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

@@ -216,7 +216,7 @@ export default function CalendarPage() {
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-semibold">{booking.surname_and_name}</p>
+                            <p className="font-semibold">{booking.first_name} {booking.last_name}</p>
                             <p className="text-sm opacity-75">{getVanName(booking.van_id)}</p>
                           </div>
                           <Badge className={getStatusColor(booking.status)}>

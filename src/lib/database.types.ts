@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       booking_status_history: {
@@ -61,11 +86,12 @@ export type Database = {
           created_at: string | null
           departure_date: string
           email: string
+          first_name: string
           id: string
+          last_name: string
           requests: string | null
           return_date: string
           status: Database["public"]["Enums"]["booking_status"]
-          surname_and_name: string
           telephone: string
           terms_accepted: boolean
           updated_at: string | null
@@ -79,11 +105,12 @@ export type Database = {
           created_at?: string | null
           departure_date: string
           email: string
+          first_name: string
           id?: string
+          last_name: string
           requests?: string | null
           return_date: string
           status?: Database["public"]["Enums"]["booking_status"]
-          surname_and_name: string
           telephone: string
           terms_accepted?: boolean
           updated_at?: string | null
@@ -97,11 +124,12 @@ export type Database = {
           created_at?: string | null
           departure_date?: string
           email?: string
+          first_name?: string
           id?: string
+          last_name?: string
           requests?: string | null
           return_date?: string
           status?: Database["public"]["Enums"]["booking_status"]
-          surname_and_name?: string
           telephone?: string
           terms_accepted?: boolean
           updated_at?: string | null
@@ -286,6 +314,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       booking_status: [
