@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { Van } from '@/lib/supabase'
+import { formatDate } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -41,14 +42,6 @@ export default function CampervansPage() {
   useEffect(() => {
     fetchVans()
   }, [])
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   const handleDelete = async (vanId: string, vanName: string) => {
     if (!confirm(`Are you sure you want to delete ${vanName}? This action cannot be undone.`)) {

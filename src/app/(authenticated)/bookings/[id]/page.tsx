@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
-import type { Booking, Van, BookingStatusHistory } from '@/lib/supabase'
+import type { Booking, Van, BookingStatusHistory, BookingStatus } from '@/lib/supabase'
+import { Constants } from '@/lib/database.types'
+import { formatDate, calculateDays } from '@/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { Calendar, Mail, Phone, User, Clock, ArrowLeft, CheckCircle, XCircle, Trash2, Car } from 'lucide-react'
+import { Calendar, Mail, Phone, User, Clock, ArrowLeft, Trash2, Car } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +42,8 @@ export default function BookingDetailPage() {
   const [statusHistory, setStatusHistory] = useState<BookingStatusHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [rejectNotes, setRejectNotes] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState<BookingStatus | null>(null)
+  const [statusNotes, setStatusNotes] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
@@ -95,7 +98,7 @@ export default function BookingDetailPage() {
     }
   }
 
-  const updateBookingStatus = async (newStatus: 'approved' | 'rejected', adminNotes?: string) => {
+  const updateBookingStatus = async (newStatus: BookingStatus, adminNotes?: string) => {
     if (!booking) return
 
     try {
@@ -131,7 +134,8 @@ export default function BookingDetailPage() {
       fetchBooking()
       fetchStatusHistory()
       setIsDialogOpen(false)
-      setRejectNotes('')
+      setSelectedStatus(null)
+      setStatusNotes('')
     } catch (error) {
       console.error('Error updating booking:', error)
       alert('Failed to update booking status')
@@ -188,34 +192,17 @@ export default function BookingDetailPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
-      case 'approved':
-        return 'bg-green-100 text-green-800 hover:bg-green-100'
-      case 'rejected':
-        return 'bg-pink-100 text-pink-800 hover:bg-pink-100'
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+  const getStatusColor = (status: BookingStatus) => {
+    const colors: Record<BookingStatus, string> = {
+      pending: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+      approved: 'bg-green-100 text-green-800 hover:bg-green-100',
+      rejected: 'bg-pink-100 text-pink-800 hover:bg-pink-100',
+      cancelled: 'bg-red-100 text-red-800 hover:bg-red-100',
+      completed: 'bg-blue-100 text-blue-800 hover:bg-blue-100'
     }
+    return colors[status]
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  const calculateDays = (departure: string, returnDate: string) => {
-    const start = new Date(departure)
-    const end = new Date(returnDate)
-    const diffTime = Math.abs(end.getTime() - start.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
 
   if (loading) {
     return (
@@ -294,7 +281,7 @@ export default function BookingDetailPage() {
             <h1 className="text-3xl font-bold text-gray-900">Booking Details</h1>
             <Badge className={getStatusColor(booking.status)}>{booking.status.toUpperCase()}</Badge>
           </div>
-          <p className="text-gray-600">Submitted on {formatDate(booking.created_at)}</p>
+          <p className="text-gray-600">Submitted on {formatDate(booking.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
 
         <div className="space-y-6">
@@ -385,7 +372,7 @@ export default function BookingDetailPage() {
                 <User className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Birth Date</p>
-                  <p className="text-base text-gray-900">{formatDate(booking.birth_date)}</p>
+                  <p className="text-base text-gray-900">{formatDate(booking.birth_date, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 </div>
               </div>
             </CardContent>
@@ -401,7 +388,7 @@ export default function BookingDetailPage() {
                 <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Departure Date</p>
-                  <p className="text-base text-gray-900">{formatDate(booking.departure_date)}</p>
+                  <p className="text-base text-gray-900">{formatDate(booking.departure_date, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                   <p className="text-sm text-gray-500">Pick-up between 15:00 – 18:00 hrs</p>
                 </div>
               </div>
@@ -410,7 +397,7 @@ export default function BookingDetailPage() {
                 <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Return Date</p>
-                  <p className="text-base text-gray-900">{formatDate(booking.return_date)}</p>
+                  <p className="text-base text-gray-900">{formatDate(booking.return_date, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                   <p className="text-sm text-gray-500">Drop-off between 09:00 – 12:00 hrs</p>
                 </div>
               </div>
@@ -446,7 +433,7 @@ export default function BookingDetailPage() {
                 <CardTitle className="text-pink-900">Admin Notes</CardTitle>
                 {booking.approved_at && (
                   <CardDescription>
-                    Updated by {booking.approved_by} on {formatDate(booking.approved_at)}
+                    Updated by {booking.approved_by} on {formatDate(booking.approved_at, { year: 'numeric', month: 'long', day: 'numeric' })}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -498,11 +485,11 @@ export default function BookingDetailPage() {
                           )}
                         </div>
                         <p className="text-sm text-gray-600 mb-1">
-                          {formatDate(history.created_at)} at{' '}
-                          {new Date(history.created_at).toLocaleTimeString('en-US', {
+                          {formatDate(history.created_at, { year: 'numeric', month: 'long', day: 'numeric' })} at{' '}
+                          {history.created_at ? new Date(history.created_at).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit'
-                          })}
+                          }) : '-'}
                         </p>
                         {history.changed_by && <p className="text-sm text-gray-500 mb-2">by {history.changed_by}</p>}
                         {history.notes && (
@@ -516,70 +503,102 @@ export default function BookingDetailPage() {
             </Card>
           )}
 
-          {/* Actions */}
-          {booking.status === 'pending' && (
-            <Card className="border-gray-300">
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-                <CardDescription>Review and approve or reject this booking request</CardDescription>
-              </CardHeader>
-              <CardContent className="flex gap-3">
-                <Button
-                  onClick={() => updateBookingStatus('approved')}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve Booking
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setIsDialogOpen(true)}
-                  className="bg-pink-500 hover:bg-pink-600"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject Booking
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {/* Status Management */}
+          <Card className="border-gray-300">
+            <CardHeader>
+              <CardTitle>Status Management</CardTitle>
+              <CardDescription>Change the booking status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Change Status To</p>
+                  <Select
+                    value=""
+                    onValueChange={(value: BookingStatus) => {
+                      setSelectedStatus(value)
+                      setIsDialogOpen(true)
+                    }}
+                  >
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder="Select new status..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Constants.public.Enums.booking_status
+                        .filter(status => status !== booking.status)
+                        .map(status => (
+                          <SelectItem
+                            key={status}
+                            value={status}
+                          >
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Reject Dialog */}
+      {/* Status Change Dialog */}
       <Dialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={open => {
+          setIsDialogOpen(open)
+          if (!open) {
+            setSelectedStatus(null)
+            setStatusNotes('')
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Booking</DialogTitle>
+            <DialogTitle>Change Booking Status</DialogTitle>
             <DialogDescription>
-              Are you sure you want to reject this booking for {booking.surname_and_name}? You can optionally provide a
-              reason below.
+              Are you sure you want to change this booking status to <strong>{selectedStatus}</strong> for {booking?.surname_and_name}? You can optionally provide notes below.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <label className="text-sm font-medium text-gray-700 block mb-2">Reason for rejection (optional)</label>
+            <label className="text-sm font-medium text-gray-700 block mb-2">Notes (optional)</label>
             <textarea
-              value={rejectNotes}
-              onChange={e => setRejectNotes(e.target.value)}
-              className="w-full min-h-[100px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-              placeholder="Enter reason for rejection..."
+              value={statusNotes}
+              onChange={e => setStatusNotes(e.target.value)}
+              className="w-full min-h-[100px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter any notes or reasons for this status change..."
             />
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => {
+                setIsDialogOpen(false)
+                setSelectedStatus(null)
+                setStatusNotes('')
+              }}
             >
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={() => updateBookingStatus('rejected', rejectNotes || undefined)}
-              className="bg-pink-500 hover:bg-pink-600"
+              onClick={() => {
+                if (selectedStatus) {
+                  updateBookingStatus(selectedStatus, statusNotes || undefined)
+                }
+              }}
+              className={(() => {
+                const buttonColors: Record<BookingStatus, string> = {
+                  pending: 'bg-yellow-600 hover:bg-yellow-700',
+                  approved: 'bg-green-600 hover:bg-green-700',
+                  rejected: 'bg-pink-500 hover:bg-pink-600',
+                  cancelled: 'bg-red-600 hover:bg-red-700',
+                  completed: 'bg-blue-600 hover:bg-blue-700'
+                }
+                return selectedStatus ? buttonColors[selectedStatus] : 'bg-gray-600 hover:bg-gray-700'
+              })()}
             >
-              Reject Booking
+              Change Status
             </Button>
           </DialogFooter>
         </DialogContent>

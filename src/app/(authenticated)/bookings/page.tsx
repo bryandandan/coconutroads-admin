@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
-import type { Booking, Van } from '@/lib/supabase'
+import type { Booking, Van, BookingStatus } from '@/lib/supabase'
+import { formatDate, calculateDays } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'completed'>('all')
   const isDev = process.env.NODE_ENV !== 'production'
 
   useEffect(() => {
@@ -91,6 +92,8 @@ export default function BookingsPage() {
         return 'bg-green-100 text-green-800 hover:bg-green-100'
       case 'rejected':
         return 'bg-pink-100 text-pink-800 hover:bg-pink-100'
+      case 'completed':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-100'
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-100'
     }
@@ -103,22 +106,7 @@ export default function BookingsPage() {
   const pendingCount = bookings.filter(b => b.status === 'pending').length
   const approvedCount = bookings.filter(b => b.status === 'approved').length
   const rejectedCount = bookings.filter(b => b.status === 'rejected').length
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  const calculateDays = (departure: string, returnDate: string) => {
-    const start = new Date(departure)
-    const end = new Date(returnDate)
-    const diffTime = Math.abs(end.getTime() - start.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
+  const completedCount = bookings.filter(b => b.status === 'completed').length
 
   const getVanName = (vanId: string | null) => {
     if (!vanId) return '-'
@@ -152,7 +140,7 @@ export default function BookingsPage() {
         <div className="px-4 lg:px-6">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-4">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <TabsList className="grid grid-cols-4 w-auto lg:w-[500px]">
+          <TabsList className="grid grid-cols-5 w-auto lg:w-[600px]">
           <TabsTrigger value="all">
             All ({bookings.length})
           </TabsTrigger>
@@ -164,6 +152,9 @@ export default function BookingsPage() {
           </TabsTrigger>
           <TabsTrigger value="rejected">
             Rejected ({rejectedCount})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completed ({completedCount})
           </TabsTrigger>
         </TabsList>
         <AddBookingModal onBookingAdded={fetchBookings} />

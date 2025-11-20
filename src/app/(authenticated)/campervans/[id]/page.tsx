@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { Van, Booking } from '@/lib/supabase'
+import { formatDate, calculateDays } from '@/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -120,14 +121,6 @@ export default function CampervanDetailPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -228,7 +221,7 @@ export default function CampervanDetailPage() {
             </Badge>
           </div>
           <p className="text-gray-600">
-            Added on {formatDate(van.created_at)}
+            Added on {formatDate(van.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
 
@@ -251,7 +244,7 @@ export default function CampervanDetailPage() {
                     {van.is_active ? 'Active' : 'Inactive'}
                   </span>
                   <Switch
-                    checked={van.is_active}
+                    checked={van.is_active ?? false}
                     onCheckedChange={handleToggleStatus}
                     disabled={isUpdatingStatus}
                   />

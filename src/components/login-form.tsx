@@ -92,9 +92,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <Button type="submit" disabled={loading}>
                   {loading ? 'Signing in...' : 'Login'}
                 </Button>
-                <Button variant="outline" type="button" disabled>
-                  Login with Google
-                </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{' '}
                   <a href="#" onClick={e => e.preventDefault()}>

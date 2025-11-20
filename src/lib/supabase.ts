@@ -1,46 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Types for our database tables
-export interface Van {
-  id: string
-  name: string
-  description: string | null
-  purchased_at: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+// Export enum type from database
+export type BookingStatus = Database['public']['Enums']['booking_status']
 
-export interface Booking {
-  id: string
-  van_id: string | null
-  surname_and_name: string
-  email: string
-  birth_date: string
-  telephone: string
-  departure_date: string
-  return_date: string
-  requests: string | null
-  terms_accepted: boolean
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed'
-  admin_notes: string | null
-  approved_by: string | null
-  approved_at: string | null
-  created_at: string
-  updated_at: string
-}
+// Types derived from database schema
+export type Van = Database['public']['Tables']['vans']['Row']
+export type VanInsert = Database['public']['Tables']['vans']['Insert']
+export type VanUpdate = Database['public']['Tables']['vans']['Update']
 
-export interface BookingStatusHistory {
-  id: string
-  booking_id: string
-  old_status: string | null
-  new_status: string
-  changed_by: string | null
-  notes: string | null
-  created_at: string
-}
+export type Booking = Database['public']['Tables']['bookings']['Row']
+export type BookingInsert = Database['public']['Tables']['bookings']['Insert']
+export type BookingUpdate = Database['public']['Tables']['bookings']['Update']
+
+export type BookingStatusHistory = Database['public']['Tables']['booking_status_history']['Row']
+export type BookingStatusHistoryInsert = Database['public']['Tables']['booking_status_history']['Insert']
+export type BookingStatusHistoryUpdate = Database['public']['Tables']['booking_status_history']['Update']
