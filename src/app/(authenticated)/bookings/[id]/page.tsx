@@ -13,9 +13,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
-import { Calendar, Mail, Phone, Globe, User, Clock, ArrowLeft, CheckCircle, XCircle, Trash2, Car } from 'lucide-react'
+import { Calendar, Mail, Phone, User, Clock, ArrowLeft, CheckCircle, XCircle, Trash2, Car } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,13 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function BookingDetailPage() {
   const router = useRouter()
@@ -60,11 +54,7 @@ export default function BookingDetailPage() {
   const fetchBooking = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('id', bookingId)
-        .single()
+      const { data, error } = await supabase.from('bookings').select('*').eq('id', bookingId).single()
 
       if (error) throw error
       setBooking(data)
@@ -105,10 +95,7 @@ export default function BookingDetailPage() {
     }
   }
 
-  const updateBookingStatus = async (
-    newStatus: 'approved' | 'rejected',
-    adminNotes?: string
-  ) => {
+  const updateBookingStatus = async (newStatus: 'approved' | 'rejected', adminNotes?: string) => {
     if (!booking) return
 
     try {
@@ -130,15 +117,13 @@ export default function BookingDetailPage() {
       if (bookingError) throw bookingError
 
       // Create status history record
-      const { error: historyError } = await supabase
-        .from('booking_status_history')
-        .insert({
-          booking_id: bookingId,
-          old_status: oldStatus,
-          new_status: newStatus,
-          changed_by: changedBy,
-          notes: adminNotes || null
-        })
+      const { error: historyError } = await supabase.from('booking_status_history').insert({
+        booking_id: bookingId,
+        old_status: oldStatus,
+        new_status: newStatus,
+        changed_by: changedBy,
+        notes: adminNotes || null
+      })
 
       if (historyError) throw historyError
 
@@ -191,10 +176,7 @@ export default function BookingDetailPage() {
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .eq('id', bookingId)
+      const { error } = await supabase.from('bookings').delete().eq('id', bookingId)
 
       if (error) throw error
 
@@ -276,7 +258,10 @@ export default function BookingDetailPage() {
           {process.env.NODE_ENV !== 'production' && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isDeleting}>
+                <Button
+                  variant="destructive"
+                  disabled={isDeleting}
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Booking
                 </Button>
@@ -307,13 +292,9 @@ export default function BookingDetailPage() {
         <div className="mb-6">
           <div className="flex justify-between items-start mb-2">
             <h1 className="text-3xl font-bold text-gray-900">Booking Details</h1>
-            <Badge className={getStatusColor(booking.status)}>
-              {booking.status.toUpperCase()}
-            </Badge>
+            <Badge className={getStatusColor(booking.status)}>{booking.status.toUpperCase()}</Badge>
           </div>
-          <p className="text-gray-600">
-            Submitted on {formatDate(booking.created_at)}
-          </p>
+          <p className="text-gray-600">Submitted on {formatDate(booking.created_at)}</p>
         </div>
 
         <div className="space-y-6">
@@ -328,14 +309,20 @@ export default function BookingDetailPage() {
                 <Car className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-700 mb-2">Assigned Van</p>
-                  <Select value={booking.van_id || 'unassigned'} onValueChange={value => updateVanAssignment(value === 'unassigned' ? null : value)}>
+                  <Select
+                    value={booking.van_id || 'unassigned'}
+                    onValueChange={value => updateVanAssignment(value === 'unassigned' ? null : value)}
+                  >
                     <SelectTrigger className="w-full max-w-xs">
                       <SelectValue placeholder="Select a van..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">No van assigned</SelectItem>
                       {vans.map(van => (
-                        <SelectItem key={van.id} value={van.id}>
+                        <SelectItem
+                          key={van.id}
+                          value={van.id}
+                        >
                           {van.name}
                         </SelectItem>
                       ))}
@@ -386,13 +373,13 @@ export default function BookingDetailPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
+              {/* <div className="flex items-start gap-3">
                 <Globe className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Nationality</p>
                   <p className="text-base text-gray-900">{booking.nationality}</p>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-gray-500 mt-0.5" />
@@ -474,9 +461,7 @@ export default function BookingDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Status History</CardTitle>
-                <CardDescription>
-                  Timeline of status changes for this booking
-                </CardDescription>
+                <CardDescription>Timeline of status changes for this booking</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -486,12 +471,17 @@ export default function BookingDetailPage() {
                       className="flex gap-4 pb-4 border-b last:border-b-0 last:pb-0"
                     >
                       <div className="flex flex-col items-center">
-                        <div className={`w-3 h-3 rounded-full ${
-                          history.new_status === 'approved' ? 'bg-green-500' :
-                          history.new_status === 'rejected' ? 'bg-pink-500' :
-                          history.new_status === 'completed' ? 'bg-blue-500' :
-                          'bg-gray-400'
-                        }`} />
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            history.new_status === 'approved'
+                              ? 'bg-green-500'
+                              : history.new_status === 'rejected'
+                              ? 'bg-pink-500'
+                              : history.new_status === 'completed'
+                              ? 'bg-blue-500'
+                              : 'bg-gray-400'
+                          }`}
+                        />
                         {index < statusHistory.length - 1 && (
                           <div className="w-0.5 h-full min-h-[40px] bg-gray-200 mt-1" />
                         )}
@@ -514,15 +504,9 @@ export default function BookingDetailPage() {
                             minute: '2-digit'
                           })}
                         </p>
-                        {history.changed_by && (
-                          <p className="text-sm text-gray-500 mb-2">
-                            by {history.changed_by}
-                          </p>
-                        )}
+                        {history.changed_by && <p className="text-sm text-gray-500 mb-2">by {history.changed_by}</p>}
                         {history.notes && (
-                          <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
-                            {history.notes}
-                          </p>
+                          <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{history.notes}</p>
                         )}
                       </div>
                     </div>
@@ -537,9 +521,7 @@ export default function BookingDetailPage() {
             <Card className="border-gray-300">
               <CardHeader>
                 <CardTitle>Actions</CardTitle>
-                <CardDescription>
-                  Review and approve or reject this booking request
-                </CardDescription>
+                <CardDescription>Review and approve or reject this booking request</CardDescription>
               </CardHeader>
               <CardContent className="flex gap-3">
                 <Button
@@ -564,28 +546,32 @@ export default function BookingDetailPage() {
       </div>
 
       {/* Reject Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reject Booking</DialogTitle>
             <DialogDescription>
-              Are you sure you want to reject this booking for {booking.surname_and_name}?
-              You can optionally provide a reason below.
+              Are you sure you want to reject this booking for {booking.surname_and_name}? You can optionally provide a
+              reason below.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Reason for rejection (optional)
-            </label>
+            <label className="text-sm font-medium text-gray-700 block mb-2">Reason for rejection (optional)</label>
             <textarea
               value={rejectNotes}
-              onChange={(e) => setRejectNotes(e.target.value)}
+              onChange={e => setRejectNotes(e.target.value)}
               className="w-full min-h-[100px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
               placeholder="Enter reason for rejection..."
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
