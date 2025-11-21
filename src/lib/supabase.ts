@@ -21,3 +21,7 @@ export type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 export type BookingStatusHistory = Database['public']['Tables']['booking_status_history']['Row']
 export type BookingStatusHistoryInsert = Database['public']['Tables']['booking_status_history']['Insert']
 export type BookingStatusHistoryUpdate = Database['public']['Tables']['booking_status_history']['Update']
+
+export type BlockedDate = Database['public']['Tables']['blocked_dates']['Row']
+export type BlockedDateInsert = Database['public']['Tables']['blocked_dates']['Insert']
+export type BlockedDateUpdate = Database['public']['Tables']['blocked_dates']['Update']

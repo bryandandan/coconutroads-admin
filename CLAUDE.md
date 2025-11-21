@@ -116,6 +116,12 @@ The project uses Prettier with these settings:
 - Arrow functions without parens (when possible)
 - Single attribute per line in JSX
 
+**Desktop-Only Application**:
+- This admin dashboard is designed for desktop use only
+- Do not worry about mobile responsiveness or mobile-first design
+- Focus on desktop layouts and desktop-optimized Tailwind classes
+- No need to add responsive breakpoints (sm:, md:, lg:, etc.) unless specifically requested
+
 ## Important Implementation Details
 
 1. **Next.js 16 Specifics**:
@@ -213,3 +219,73 @@ You have access to tools for inspecting the database schema:
    - Use `pnpm supabase db diff` to compare local and remote schemas
 
 Use these tools when you need to understand table structures, relationships, constraints, or available columns before implementing database operations.
+
+### Supabase Migrations - CRITICAL WORKFLOW
+
+**⚠️ LOCAL MIGRATION FILES ARE THE SOURCE OF TRUTH**
+
+Always create migration files locally FIRST, then push them. This is a single-developer project, so local files are always authoritative.
+
+**⚠️ CRITICAL: NEVER run `supabase db pull` - it will cause sync conflicts!**
+
+### Migration Workflow
+
+The ONLY workflow for this project:
+
+```bash
+# 1. Create migration file locally FIRST
+supabase/migrations/[timestamp]_migration_name.sql
+
+# 2. Write your SQL in the file
+CREATE TABLE ...
+ALTER TABLE ...
+etc.
+
+# 3. Apply migration to remote database
+supabase db push
+
+# 4. Commit to Git - DONE! DO NOT PULL!
+git add supabase/migrations/
+git commit -m "feat: add migration_name"
+```
+
+**Why never pull?**
+- You are the sole developer - all changes originate locally
+- Local migration files are the single source of truth
+- `supabase db pull` tries to reverse-engineer migrations from remote state
+- Pulling after pushing creates duplicate/conflicting migrations
+- The database state should match your local files - pulling breaks this
+
+**If you accidentally run migrations out of sync:**
+- Do NOT use `supabase db pull` to "fix" it
+- Check which migrations are applied: `supabase migration list`
+- Manually create/adjust migration files if needed
+- Reset local database if necessary: `supabase db reset`
+
+### Tool Usage
+
+- **Supabase CLI**:
+  - `supabase db push` - Apply local migrations to remote ✅
+  - `supabase db reset` - Reset local database (testing) ✅
+  - `supabase migration list` - Check applied migrations ✅
+  - `supabase db pull` - ❌ NEVER USE - causes conflicts
+
+- **Supabase MCP**: Use ONLY for read-only operations:
+  - `list_tables` - inspect schema
+  - `list_migrations` - verify applied migrations
+  - `execute_sql` - query data
+  - `get_logs` - debugging
+  - `get_advisors` - security/performance checks
+
+**⚠️ DO NOT use `mcp__supabase__apply_migration` - it bypasses the file-first workflow**
+
+### Why This Matters
+
+- Migration files are the single source of truth
+- Local files required to recreate database from scratch
+- Git history tracks all schema changes chronologically
+- Remote database is just a reflection of local migration files
+- Pulling introduces drift and breaks the local-first model
+
+**Migration File Location:** `supabase/migrations/`
+**Timestamp Format:** `YYYYMMDDHHMMSS_migration_name.sql` (e.g., `20251119123000_add_user_roles.sql`)
