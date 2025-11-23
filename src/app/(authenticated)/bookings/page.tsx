@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-client'
-import type { Booking, Van } from '@/lib/supabase'
+import type { Booking } from '@/lib/supabase'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { DataTable } from '@/components/ui/data-table'
 import { columns } from './columns'
@@ -18,12 +18,10 @@ const statusOptions = [
 export default function BookingsPage() {
   const supabase = createClient()
   const [bookings, setBookings] = useState<Booking[]>([])
-  const [vans, setVans] = useState<Van[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchBookings()
-    fetchVans()
   }, [])
 
   // Set up real-time subscription for automatic updates
@@ -67,20 +65,6 @@ export default function BookingsPage() {
     }
   }
 
-  const fetchVans = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('vans')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setVans(data || [])
-    } catch (error) {
-      console.error('Error fetching vans:', error)
-    }
-  }
 
   return (
     <TooltipProvider>
