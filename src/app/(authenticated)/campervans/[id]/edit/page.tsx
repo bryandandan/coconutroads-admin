@@ -112,7 +112,7 @@ export default function EditCampervanPage() {
             onClick={() => router.push('/campervans')}
             disabled={saving}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Campervans
           </Button>
         </div>
@@ -198,7 +198,7 @@ export default function EditCampervanPage() {
                   Cancel
                 </Button>
                 <Button size="sm" type="submit" disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4" />
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>

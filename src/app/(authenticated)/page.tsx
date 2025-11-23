@@ -28,7 +28,7 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-600">
                 View and manage all campervan bookings, approve or reject requests, and track booking status.
               </p>
-              <Button variant="ghost" className="mt-4 w-full">
+              <Button variant="outline" className="mt-4 w-full">
                 View Bookings
               </Button>
             </CardContent>
@@ -50,7 +50,7 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-600">
                 Add, edit, and manage your campervan fleet. Set availability and track vehicle status.
               </p>
-              <Button variant="ghost" className="mt-4 w-full">
+              <Button variant="outline" className="mt-4 w-full">
                 View Campervans
               </Button>
             </CardContent>

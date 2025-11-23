@@ -149,7 +149,7 @@ export default function EditBookingPage() {
             onClick={() => router.push('/bookings')}
             disabled={saving}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Bookings
           </Button>
         </div>
@@ -341,7 +341,7 @@ export default function EditBookingPage() {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={saving}>
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4" />
                     {saving ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>

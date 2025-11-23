@@ -131,7 +131,7 @@ export default function BookingDetailPage() {
           <div className="p-8 text-center text-gray-600">Booking not found.</div>
           <div className="text-center">
             <Button size="sm" onClick={() => router.push('/bookings')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back to Bookings
             </Button>
           </div>
@@ -149,7 +149,7 @@ export default function BookingDetailPage() {
             variant="ghost"
             onClick={() => router.push('/bookings')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Bookings
           </Button>
 
@@ -158,7 +158,7 @@ export default function BookingDetailPage() {
               size="sm"
               onClick={() => router.push(`/bookings/${bookingId}/edit`)}
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4" />
               Edit Booking
             </Button>
 
@@ -170,7 +170,7 @@ export default function BookingDetailPage() {
                     variant="destructive"
                     disabled={isDeleting}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4" />
                     Delete Booking
                   </Button>
                 </AlertDialogTrigger>

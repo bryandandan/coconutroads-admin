@@ -197,7 +197,7 @@ export default function CalendarPage() {
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button onClick={addBlockedDate} disabled={saving} className="flex-1">
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                     {saving ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update' : 'Add Blocked Date')}
                   </Button>
                   {editingId && (

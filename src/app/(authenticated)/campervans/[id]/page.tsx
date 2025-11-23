@@ -128,7 +128,7 @@ export default function CampervanDetailPage() {
           <div className="p-8 text-center text-gray-600">Campervan not found.</div>
           <div className="text-center">
             <Button size="sm" onClick={() => router.push('/campervans')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back to Campervans
             </Button>
           </div>
@@ -146,7 +146,7 @@ export default function CampervanDetailPage() {
             variant="ghost"
             onClick={() => router.push('/campervans')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Campervans
           </Button>
 
@@ -155,7 +155,7 @@ export default function CampervanDetailPage() {
               size="sm"
               onClick={() => router.push(`/campervans/${vanId}/edit`)}
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4" />
               Edit Van
             </Button>
 
@@ -163,7 +163,7 @@ export default function CampervanDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="destructive" disabled={isDeleting}>
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4" />
                     Delete Van
                   </Button>
                 </AlertDialogTrigger>
