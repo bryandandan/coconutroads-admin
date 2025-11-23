@@ -5,24 +5,23 @@ import { createClient } from '@/lib/supabase-client'
 import type { BlockedDate, BlockedDateInsert } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, CalendarDayButton } from '@/components/ui/calendar'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { format, parseISO, isWithinInterval, startOfDay } from 'date-fns'
-import type { DayButton } from 'react-day-picker'
-import { cn } from '@/lib/utils'
-import { Trash2, Plus } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { Trash2, Plus, Pencil } from 'lucide-react'
+import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 
 export default function CalendarPage() {
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [newBlockedDate, setNewBlockedDate] = useState({
     start_date: '',
     end_date: '',
     reason: ''
   })
   const [saving, setSaving] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchBlockedDates()
@@ -48,25 +47,6 @@ export default function CalendarPage() {
     }
   }
 
-  const isDateBlocked = (date: Date): boolean => {
-    const dateStart = startOfDay(date)
-    return blockedDates.some(blocked => {
-      const startDate = startOfDay(parseISO(blocked.start_date))
-      const endDate = startOfDay(parseISO(blocked.end_date))
-      return isWithinInterval(dateStart, { start: startDate, end: endDate })
-    })
-  }
-
-  const getBlockedReasonForDate = (date: Date): string | null => {
-    const dateStart = startOfDay(date)
-    const blocked = blockedDates.find(b => {
-      const startDate = startOfDay(parseISO(b.start_date))
-      const endDate = startOfDay(parseISO(b.end_date))
-      return isWithinInterval(dateStart, { start: startDate, end: endDate })
-    })
-    return blocked?.reason || null
-  }
-
   const addBlockedDate = async () => {
     if (!newBlockedDate.start_date || !newBlockedDate.end_date) {
       alert('Please select both start and end dates')
@@ -76,29 +56,62 @@ export default function CalendarPage() {
     setSaving(true)
     try {
       const supabase = createClient()
-      const { data: userData } = await supabase.auth.getUser()
 
-      const insertData: BlockedDateInsert = {
-        start_date: newBlockedDate.start_date,
-        end_date: newBlockedDate.end_date,
-        reason: newBlockedDate.reason || null,
-        created_by: userData.user?.email || null
+      if (editingId) {
+        // Update existing blocked date
+        const { error } = await supabase
+          .from('blocked_dates')
+          .update({
+            start_date: newBlockedDate.start_date,
+            end_date: newBlockedDate.end_date,
+            reason: newBlockedDate.reason || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingId)
+
+        if (error) throw error
+      } else {
+        // Insert new blocked date
+        const { data: userData } = await supabase.auth.getUser()
+
+        const insertData: BlockedDateInsert = {
+          start_date: newBlockedDate.start_date,
+          end_date: newBlockedDate.end_date,
+          reason: newBlockedDate.reason || null,
+          created_by: userData.user?.email || null
+        }
+
+        const { error } = await supabase.from('blocked_dates').insert(insertData)
+
+        if (error) throw error
       }
-
-      const { error } = await supabase.from('blocked_dates').insert(insertData)
-
-      if (error) throw error
 
       // Reset form
       setNewBlockedDate({ start_date: '', end_date: '', reason: '' })
-      // Refresh list
+      setEditingId(null)
+      // Refresh list and calendar
       await fetchBlockedDates()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
-      console.error('Error adding blocked date:', error)
-      alert('Failed to add blocked date')
+      console.error('Error saving blocked date:', error)
+      alert('Failed to save blocked date')
     } finally {
       setSaving(false)
     }
+  }
+
+  const startEditing = (blocked: BlockedDate) => {
+    setEditingId(blocked.id)
+    setNewBlockedDate({
+      start_date: blocked.start_date,
+      end_date: blocked.end_date,
+      reason: blocked.reason || ''
+    })
+  }
+
+  const cancelEditing = () => {
+    setEditingId(null)
+    setNewBlockedDate({ start_date: '', end_date: '', reason: '' })
   }
 
   const deleteBlockedDate = async (id: string) => {
@@ -110,33 +123,13 @@ export default function CalendarPage() {
 
       if (error) throw error
 
+      // Refresh list and calendar
       await fetchBlockedDates()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       console.error('Error deleting blocked date:', error)
       alert('Failed to delete blocked date')
     }
-  }
-
-  // Custom day button that shows blocked dates in red, available dates in green, and past dates greyed out
-  const CustomDayButton = (props: React.ComponentProps<typeof DayButton>) => {
-    const blocked = isDateBlocked(props.day.date)
-    const isPast = startOfDay(props.day.date) < startOfDay(new Date())
-
-    return (
-      <div className="p-0.5">
-        <CalendarDayButton
-          {...props}
-          className={cn(
-            props.className,
-            isPast
-              ? 'bg-gray-100 text-gray-400 hover:bg-gray-100 opacity-50'
-              : blocked
-                ? 'bg-red-100 text-red-900 hover:bg-red-200 data-[selected-single=true]:bg-red-500 data-[selected-single=true]:text-white'
-                : 'bg-green-100 text-green-900 hover:bg-green-200 data-[selected-single=true]:bg-green-500 data-[selected-single=true]:text-white'
-          )}
-        />
-      </div>
-    )
   }
 
   if (loading) {
@@ -151,54 +144,14 @@ export default function CalendarPage() {
     )
   }
 
-  const blocked = selectedDate ? isDateBlocked(selectedDate) : false
-  const blockedReason = selectedDate ? getBlockedReasonForDate(selectedDate) : null
-
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
       <div className="px-4 lg:px-6">
         {/* Calendar and Management Side by Side */}
         <div className="grid gap-6 md:grid-cols-[auto_1fr]">
-          {/* Left: Calendar */}
-          <div>
-            {/* Legend */}
-            <div className="mb-4 flex gap-4">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-green-500" />
-                <span className="text-sm">Available</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-                <span className="text-sm">Blocked</span>
-              </div>
-            </div>
-
-            <div style={{ '--cell-size': '2.5rem' } as React.CSSProperties}>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                components={{
-                  DayButton: CustomDayButton
-                }}
-                className="rounded-md border shadow-sm"
-              />
-            </div>
-
-            {/* Discreet Selected Date Info */}
-            {selectedDate && (
-              <div className="mt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">{format(selectedDate, 'MMM d, yyyy')}:</span>
-                  <span className={cn('font-medium', blocked ? 'text-red-600' : 'text-green-600')}>
-                    {blocked ? 'Blocked' : 'Available'}
-                  </span>
-                </div>
-                {blocked && blockedReason && (
-                  <p className="mt-1 text-muted-foreground">Reason: {blockedReason}</p>
-                )}
-              </div>
-            )}
+          {/* Left: Standalone Calendar */}
+          <div key={refreshKey}>
+            <AvailabilityCalendar />
           </div>
 
           {/* Right: Management */}
@@ -207,9 +160,11 @@ export default function CalendarPage() {
               <CardTitle>Manage Blocked Dates</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Add New Blocked Date Form */}
+              {/* Add/Edit Blocked Date Form */}
               <div className="rounded-lg border p-4">
-                <h3 className="mb-4 font-semibold">Add Blocked Date Range</h3>
+                <h3 className="mb-4 font-semibold">
+                  {editingId ? 'Edit Blocked Date Range' : 'Add Blocked Date Range'}
+                </h3>
                 <div className="space-y-3">
                   <div>
                     <Label htmlFor="start_date">Start Date</Label>
@@ -240,14 +195,17 @@ export default function CalendarPage() {
                     />
                   </div>
                 </div>
-                <Button
-                  onClick={addBlockedDate}
-                  disabled={saving}
-                  className="mt-4 w-full"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {saving ? 'Adding...' : 'Add Blocked Date'}
-                </Button>
+                <div className="mt-4 flex gap-2">
+                  <Button onClick={addBlockedDate} disabled={saving} className="flex-1">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {saving ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update' : 'Add Blocked Date')}
+                  </Button>
+                  {editingId && (
+                    <Button onClick={cancelEditing} variant="outline" disabled={saving}>
+                      Cancel
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Blocked Dates List */}
@@ -269,13 +227,14 @@ export default function CalendarPage() {
                           </div>
                           {blocked.reason && <div className="text-sm text-muted-foreground">{blocked.reason}</div>}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteBlockedDate(blocked.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => startEditing(blocked)}>
+                            <Pencil className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteBlockedDate(blocked.id)}>
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
