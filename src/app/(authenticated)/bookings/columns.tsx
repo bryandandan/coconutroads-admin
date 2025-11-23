@@ -30,7 +30,10 @@ export const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'first_name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Customer" />
+      <DataTableColumnHeader
+        column={column}
+        title="Customer"
+      />
     ),
     cell: ({ row }) => {
       return (
@@ -47,14 +50,17 @@ export const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'email',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Email" />
+      <DataTableColumnHeader
+        column={column}
+        title="Email"
+      />
     ),
     cell: ({ row }) => {
       return (
         <a
           href={`mailto:${row.getValue('email')}`}
           className="text-blue-600 hover:underline"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {row.getValue('email')}
         </a>
@@ -65,7 +71,10 @@ export const columns: ColumnDef<Booking>[] = [
     id: 'van_name',
     accessorFn: (row: any) => row.vans?.name || null,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Van" />
+      <DataTableColumnHeader
+        column={column}
+        title="Van"
+      />
     ),
     cell: ({ row }) => {
       const vanName = row.getValue('van_name') as string | null
@@ -75,22 +84,31 @@ export const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'departure_date',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Departure" />
+      <DataTableColumnHeader
+        column={column}
+        title="Departure"
+      />
     ),
     cell: ({ row }) => formatDate(row.getValue('departure_date'))
   },
   {
     accessorKey: 'return_date',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Return" />
+      <DataTableColumnHeader
+        column={column}
+        title="Return"
+      />
     ),
     cell: ({ row }) => formatDate(row.getValue('return_date'))
   },
   {
     id: 'duration',
-    accessorFn: (row) => calculateDays(row.departure_date, row.return_date),
+    accessorFn: row => calculateDays(row.departure_date, row.return_date),
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Duration" />
+      <DataTableColumnHeader
+        column={column}
+        title="Duration"
+      />
     ),
     cell: ({ row }) => {
       const days = row.getValue('duration') as number
@@ -100,15 +118,14 @@ export const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader
+        column={column}
+        title="Status"
+      />
     ),
     cell: ({ row }) => {
       const status = row.getValue('status') as string
-      return (
-        <Badge className={getStatusColor(status)}>
-          {status.toUpperCase()}
-        </Badge>
-      )
+      return <Badge className={getStatusColor(status)}>{status.toUpperCase()}</Badge>
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
@@ -117,11 +134,12 @@ export const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'created_at',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Submitted" />
+      <DataTableColumnHeader
+        column={column}
+        title="Submitted"
+      />
     ),
-    cell: ({ row }) => (
-      <div className="text-gray-600">{formatDate(row.getValue('created_at'))}</div>
-    )
+    cell: ({ row }) => <div className="text-gray-600">{formatDate(row.getValue('created_at'))}</div>
   },
   {
     id: 'actions',
@@ -133,15 +151,16 @@ export const columns: ColumnDef<Booking>[] = [
 
       const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation()
-        if (!confirm(`Are you sure you want to delete the booking for ${booking.first_name} ${booking.last_name}? This action cannot be undone.`)) {
+        if (
+          !confirm(
+            `Are you sure you want to delete the booking for ${booking.first_name} ${booking.last_name}? This action cannot be undone.`
+          )
+        ) {
           return
         }
 
         try {
-          const { error } = await supabase
-            .from('bookings')
-            .delete()
-            .eq('id', booking.id)
+          const { error } = await supabase.from('bookings').delete().eq('id', booking.id)
 
           if (error) throw error
         } catch (error) {
@@ -157,7 +176,7 @@ export const columns: ColumnDef<Booking>[] = [
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation()
                   router.push(`/bookings/${booking.id}`)
                 }}
@@ -175,7 +194,7 @@ export const columns: ColumnDef<Booking>[] = [
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation()
                   router.push(`/bookings/${booking.id}/edit`)
                 }}
@@ -188,23 +207,21 @@ export const columns: ColumnDef<Booking>[] = [
               <p>Edit</p>
             </TooltipContent>
           </Tooltip>
-          {isDev && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Delete</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Delete</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       )
     }

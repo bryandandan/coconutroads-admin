@@ -3,9 +3,9 @@
 import * as React from 'react'
 import Image from 'next/image'
 import { IconCalendar, IconCalendarEvent, IconDashboard, IconTruck } from '@tabler/icons-react'
-
 import { NavMain } from '@/components/nav-main'
 import { NavUser } from '@/components/nav-user'
+import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import {
   Sidebar,
   SidebarContent,
@@ -13,8 +13,11 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupLabel
 } from '@/components/ui/sidebar'
+import Link from 'next/link'
 
 const data = {
   user: {
@@ -39,7 +42,7 @@ const data = {
       icon: IconTruck
     },
     {
-      title: 'Calendar',
+      title: 'Blocked Dates',
       url: '/calendar',
       icon: IconCalendarEvent
     }
@@ -59,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="/">
+              <Link href="/">
                 <Image
                   src="/Logo Square - Icon Color - BG Pink.jpg"
                   alt="CoconutRoads"
@@ -68,13 +71,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="rounded-full"
                 />
                 <span className="text-base font-semibold">CoconutRoads</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
+        <SidebarGroup>
+          <SidebarGroupLabel>Availability</SidebarGroupLabel>
+          <AvailabilityCalendar />
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

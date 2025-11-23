@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { format, parseISO, differenceInDays } from 'date-fns'
 import { Trash2, Plus, Pencil } from 'lucide-react'
-import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 
 export default function CalendarPage() {
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([])
@@ -22,7 +21,6 @@ export default function CalendarPage() {
     reason: ''
   })
   const [saving, setSaving] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -93,9 +91,8 @@ export default function CalendarPage() {
       setNewBlockedDate({ start_date: '', end_date: '', reason: '' })
       setEditingId(null)
       setDialogOpen(false)
-      // Refresh list and calendar
+      // Refresh list
       await fetchBlockedDates()
-      setRefreshKey(prev => prev + 1)
     } catch (error) {
       console.error('Error saving blocked date:', error)
       alert('Failed to save blocked date')
@@ -129,9 +126,8 @@ export default function CalendarPage() {
 
       if (error) throw error
 
-      // Refresh list and calendar
+      // Refresh list
       await fetchBlockedDates()
-      setRefreshKey(prev => prev + 1)
     } catch (error) {
       console.error('Error deleting blocked date:', error)
       alert('Failed to delete blocked date')
@@ -154,11 +150,6 @@ export default function CalendarPage() {
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
       <div className="px-4 lg:px-6">
         <div className="space-y-6">
-          {/* Calendar */}
-          <div key={refreshKey} className="flex justify-center">
-            <AvailabilityCalendar />
-          </div>
-
           {/* Manage Blocked Dates */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">

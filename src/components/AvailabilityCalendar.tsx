@@ -61,10 +61,7 @@ export default function AvailabilityCalendar() {
       // Create Supabase client directly (no import needed)
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-      const { data, error } = await supabase
-        .from('blocked_dates')
-        .select('*')
-        .order('start_date', { ascending: true })
+      const { data, error } = await supabase.from('blocked_dates').select('*').order('start_date', { ascending: true })
 
       if (error) throw error
 
@@ -101,19 +98,19 @@ export default function AvailabilityCalendar() {
     const isPast = startOfDay(props.day.date) < startOfDay(new Date())
 
     return (
-      <div className="p-0.5">
-        <CalendarDayButton
-          {...props}
-          className={cn(
-            props.className,
-            isPast
-              ? 'bg-gray-100 text-gray-400 hover:bg-gray-100 opacity-50'
-              : blocked
-                ? 'bg-red-100 text-red-900 hover:bg-red-200 data-[selected-single=true]:bg-red-500 data-[selected-single=true]:text-white'
-                : 'bg-green-100 text-green-900 hover:bg-green-200 data-[selected-single=true]:bg-green-500 data-[selected-single=true]:text-white'
-          )}
-        />
-      </div>
+      // <div className="p-0.5">
+      <CalendarDayButton
+        {...props}
+        className={cn(
+          props.className,
+          isPast
+            ? 'bg-gray-100 text-gray-400 hover:bg-gray-100 opacity-50'
+            : blocked
+            ? 'bg-red-100 text-red-900 hover:bg-red-200 data-[selected-single=true]:bg-red-500 data-[selected-single=true]:text-white'
+            : 'bg-green-100 text-green-900 hover:bg-green-200 data-[selected-single=true]:bg-green-500 data-[selected-single=true]:text-white'
+        )}
+      />
+      // </div>
     )
   }
 

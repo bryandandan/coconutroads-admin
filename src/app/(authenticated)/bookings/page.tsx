@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import type { Booking, Van } from '@/lib/supabase'
-import { Card, CardContent } from '@/components/ui/card'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { DataTable } from '@/components/ui/data-table'
 import { columns } from './columns'
@@ -38,7 +37,7 @@ export default function BookingsPage() {
           schema: 'public',
           table: 'bookings'
         },
-        (payload) => {
+        payload => {
           // Refetch bookings when any change occurs
           fetchBookings()
         }
@@ -88,9 +87,7 @@ export default function BookingsPage() {
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         <div className="px-4 lg:px-6">
           {loading ? (
-            <div className="p-8 text-center text-gray-600">
-              Loading bookings...
-            </div>
+            <div className="p-8 text-center text-gray-600">Loading bookings...</div>
           ) : (
             <DataTable
               columns={columns}

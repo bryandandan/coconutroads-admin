@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import type { Booking, Van, BookingStatusHistory, BookingStatus } from '@/lib/supabase'
-import { Constants } from '@/lib/database.types'
 import { formatDate, calculateDays } from '@/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -86,7 +85,6 @@ export default function BookingDetailPage() {
     }
   }
 
-
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
@@ -113,7 +111,6 @@ export default function BookingDetailPage() {
     return colors[status]
   }
 
-
   if (loading) {
     return (
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -130,7 +127,10 @@ export default function BookingDetailPage() {
         <div className="px-4 lg:px-6">
           <div className="p-8 text-center text-gray-600">Booking not found.</div>
           <div className="text-center">
-            <Button size="sm" onClick={() => router.push('/bookings')}>
+            <Button
+              size="sm"
+              onClick={() => router.push('/bookings')}
+            >
               <ArrowLeft className="h-4 w-4" />
               Back to Bookings
             </Button>
@@ -154,9 +154,7 @@ export default function BookingDetailPage() {
           </Button>
 
           <div className="flex gap-2">
-            <Button
-              onClick={() => router.push(`/bookings/${bookingId}/edit`)}
-            >
+            <Button onClick={() => router.push(`/bookings/${bookingId}/edit`)}>
               <Edit className="h-4 w-4" />
               Edit Booking
             </Button>
@@ -177,7 +175,11 @@ export default function BookingDetailPage() {
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                       This action cannot be undone. This will permanently delete the booking for
-                      <strong> {booking.first_name} {booking.last_name}</strong> from the system.
+                      <strong>
+                        {' '}
+                        {booking.first_name} {booking.last_name}
+                      </strong>{' '}
+                      from the system.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -201,7 +203,9 @@ export default function BookingDetailPage() {
             <h1 className="text-3xl font-bold text-gray-900">Booking Details</h1>
             <Badge className={getStatusColor(booking.status)}>{booking.status.toUpperCase()}</Badge>
           </div>
-          <p className="text-gray-600">Submitted on {formatDate(booking.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p className="text-gray-600">
+            Submitted on {formatDate(booking.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
         </div>
 
         <div className="space-y-6">
@@ -237,7 +241,9 @@ export default function BookingDetailPage() {
                 <User className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Full Name</p>
-                  <p className="text-base text-gray-900">{booking.first_name} {booking.last_name}</p>
+                  <p className="text-base text-gray-900">
+                    {booking.first_name} {booking.last_name}
+                  </p>
                 </div>
               </div>
 
@@ -279,7 +285,9 @@ export default function BookingDetailPage() {
                 <User className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Birth Date</p>
-                  <p className="text-base text-gray-900">{formatDate(booking.birth_date, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  <p className="text-base text-gray-900">
+                    {formatDate(booking.birth_date, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -295,7 +303,9 @@ export default function BookingDetailPage() {
                 <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Departure Date</p>
-                  <p className="text-base text-gray-900">{formatDate(booking.departure_date, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  <p className="text-base text-gray-900">
+                    {formatDate(booking.departure_date, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
                   <p className="text-sm text-gray-500">Pick-up between 15:00 – 18:00 hrs</p>
                 </div>
               </div>
@@ -304,7 +314,9 @@ export default function BookingDetailPage() {
                 <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Return Date</p>
-                  <p className="text-base text-gray-900">{formatDate(booking.return_date, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  <p className="text-base text-gray-900">
+                    {formatDate(booking.return_date, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
                   <p className="text-sm text-gray-500">Drop-off between 09:00 – 12:00 hrs</p>
                 </div>
               </div>
@@ -340,7 +352,8 @@ export default function BookingDetailPage() {
                 <CardTitle className="text-pink-900">Admin Notes</CardTitle>
                 {booking.approved_at && (
                   <CardDescription>
-                    Updated by {booking.approved_by} on {formatDate(booking.approved_at, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    Updated by {booking.approved_by} on{' '}
+                    {formatDate(booking.approved_at, { year: 'numeric', month: 'long', day: 'numeric' })}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -393,10 +406,12 @@ export default function BookingDetailPage() {
                         </div>
                         <p className="text-sm text-gray-600 mb-1">
                           {formatDate(history.created_at, { year: 'numeric', month: 'long', day: 'numeric' })} at{' '}
-                          {history.created_at ? new Date(history.created_at).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : '-'}
+                          {history.created_at
+                            ? new Date(history.created_at).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            : '-'}
                         </p>
                         {history.changed_by && <p className="text-sm text-gray-500 mb-2">by {history.changed_by}</p>}
                         {history.notes && (
@@ -409,7 +424,6 @@ export default function BookingDetailPage() {
               </CardContent>
             </Card>
           )}
-
         </div>
       </div>
     </div>
