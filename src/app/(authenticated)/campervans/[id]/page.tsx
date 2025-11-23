@@ -9,9 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Trash2, Edit2, X, Check } from 'lucide-react'
+import { ArrowLeft, Trash2, Edit } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,10 +32,6 @@ export default function CampervanDetailPage() {
   const [loading, setLoading] = useState(true)
   const [bookingsLoading, setBookingsLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
-  const [isEditingDescription, setIsEditingDescription] = useState(false)
-  const [editedDescription, setEditedDescription] = useState('')
-  const [isSavingDescription, setIsSavingDescription] = useState(false)
 
   useEffect(() => {
     if (vanId) {
@@ -103,60 +97,6 @@ export default function CampervanDetailPage() {
     }
   }
 
-  const handleToggleStatus = async (newStatus: boolean) => {
-    if (!van) return
-
-    setIsUpdatingStatus(true)
-    try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('vans')
-        .update({ is_active: newStatus })
-        .eq('id', vanId)
-
-      if (error) throw error
-
-      setVan({ ...van, is_active: newStatus })
-    } catch (error) {
-      console.error('Error updating van status:', error)
-      alert('Failed to update van status. Please try again.')
-    } finally {
-      setIsUpdatingStatus(false)
-    }
-  }
-
-  const handleEditDescription = () => {
-    setEditedDescription(van?.description || '')
-    setIsEditingDescription(true)
-  }
-
-  const handleCancelEdit = () => {
-    setIsEditingDescription(false)
-    setEditedDescription('')
-  }
-
-  const handleSaveDescription = async () => {
-    if (!van) return
-
-    setIsSavingDescription(true)
-    try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('vans')
-        .update({ description: editedDescription })
-        .eq('id', vanId)
-
-      if (error) throw error
-
-      setVan({ ...van, description: editedDescription })
-      setIsEditingDescription(false)
-    } catch (error) {
-      console.error('Error updating van description:', error)
-      alert('Failed to update van description. Please try again.')
-    } finally {
-      setIsSavingDescription(false)
-    }
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -187,7 +127,7 @@ export default function CampervanDetailPage() {
         <div className="px-4 lg:px-6">
           <div className="p-8 text-center text-gray-600">Campervan not found.</div>
           <div className="text-center">
-            <Button onClick={() => router.push('/campervans')}>
+            <Button size="sm" onClick={() => router.push('/campervans')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Campervans
             </Button>
@@ -202,6 +142,7 @@ export default function CampervanDetailPage() {
       <div className="px-4 lg:px-6">
         <div className="mb-6 flex items-center justify-between">
           <Button
+            size="sm"
             variant="ghost"
             onClick={() => router.push('/campervans')}
           >
@@ -209,41 +150,51 @@ export default function CampervanDetailPage() {
             Back to Campervans
           </Button>
 
-          {process.env.NODE_ENV !== 'production' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isDeleting}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Van
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the campervan
-                    <strong> {van.name}</strong> from the system.
-                    {bookings.length > 0 && (
-                      <span className="block mt-2 text-red-600 font-medium">
-                        Warning: This van has {bookings.length} existing {bookings.length === 1 ? 'booking' : 'bookings'}.
-                        Deleting it may affect booking records.
-                      </span>
-                    )}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => router.push(`/campervans/${vanId}/edit`)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Van
+            </Button>
+
+            {process.env.NODE_ENV !== 'production' && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive" disabled={isDeleting}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Van
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the campervan
+                      <strong> {van.name}</strong> from the system.
+                      {bookings.length > 0 && (
+                        <span className="block mt-2 text-red-600 font-medium">
+                          Warning: This van has {bookings.length} existing {bookings.length === 1 ? 'booking' : 'bookings'}.
+                          Deleting it may affect booking records.
+                        </span>
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
 
         <div className="mb-6">
@@ -269,74 +220,45 @@ export default function CampervanDetailPage() {
               <CardTitle>Campervan Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between pt-2 pb-2">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Van Status</p>
-                  <p className="text-sm text-gray-600 mt-0.5">
-                    {van.is_active ? 'Available for bookings' : 'Not available for bookings'}
-                  </p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Van Name</p>
+                  <p className="text-gray-900">{van.name}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-sm font-medium ${van.is_active ? 'text-green-700' : 'text-gray-600'}`}>
-                    {van.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                  <Switch
-                    checked={van.is_active ?? false}
-                    onCheckedChange={handleToggleStatus}
-                    disabled={isUpdatingStatus}
-                  />
+
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Status</p>
+                  <Badge className={
+                    van.is_active
+                      ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+                  }>
+                    {van.is_active ? 'ACTIVE' : 'INACTIVE'}
+                  </Badge>
+                </div>
+
+                {van.purchased_at && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-1">Purchase Date</p>
+                    <p className="text-gray-900">
+                      {formatDate(van.purchased_at, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Created</p>
+                  <p className="text-gray-900">
+                    {formatDate(van.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
                 </div>
               </div>
 
-              <div className="pt-2 border-t">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-700">Description</p>
-                  {!isEditingDescription && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleEditDescription}
-                      className="h-8"
-                    >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-                {isEditingDescription ? (
-                  <div className="space-y-3">
-                    <Textarea
-                      value={editedDescription}
-                      onChange={(e) => setEditedDescription(e.target.value)}
-                      placeholder="Enter van description..."
-                      className="min-h-[120px] resize-none"
-                      disabled={isSavingDescription}
-                    />
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCancelEdit}
-                        disabled={isSavingDescription}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveDescription}
-                        disabled={isSavingDescription}
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        {isSavingDescription ? 'Saving...' : 'Save'}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-900 whitespace-pre-wrap">
-                    {van.description || <span className="text-gray-400 italic">No description added yet</span>}
-                  </p>
-                )}
+              <div className="pt-4 border-t">
+                <p className="text-sm font-medium text-gray-700 mb-2">Description</p>
+                <p className="text-gray-900 whitespace-pre-wrap">
+                  {van.description || <span className="text-gray-400 italic">No description added yet</span>}
+                </p>
               </div>
             </CardContent>
           </Card>

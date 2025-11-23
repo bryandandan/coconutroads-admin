@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Eye, Trash2 } from 'lucide-react'
+import { Eye, Edit, Trash2 } from 'lucide-react'
 import { AddVanModal } from '@/components/add-van-modal'
 
 export default function CampervansPage() {
@@ -156,13 +156,31 @@ export default function CampervansPage() {
                                   e.stopPropagation()
                                   router.push(`/campervans/${van.id}`)
                                 }}
-                                className="cursor-pointer"
+                                className="cursor-pointer h-8 w-8 p-0"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>View</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  router.push(`/campervans/${van.id}/edit`)
+                                }}
+                                className="cursor-pointer h-8 w-8 p-0"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Edit</p>
                             </TooltipContent>
                           </Tooltip>
                           {isDev && (
@@ -175,7 +193,7 @@ export default function CampervansPage() {
                                     e.stopPropagation()
                                     handleDelete(van.id, van.name)
                                   }}
-                                  className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>

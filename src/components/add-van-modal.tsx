@@ -71,7 +71,7 @@ export function AddVanModal({ onVanAdded }: AddVanModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Add Van
         </Button>
