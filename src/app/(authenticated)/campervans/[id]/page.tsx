@@ -152,7 +152,6 @@ export default function CampervanDetailPage() {
 
           <div className="flex gap-2">
             <Button
-              size="sm"
               onClick={() => router.push(`/campervans/${vanId}/edit`)}
             >
               <Edit className="h-4 w-4" />
@@ -162,7 +161,7 @@ export default function CampervanDetailPage() {
             {process.env.NODE_ENV !== 'production' && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="destructive" disabled={isDeleting}>
+                  <Button variant="destructive" disabled={isDeleting}>
                     <Trash2 className="h-4 w-4" />
                     Delete Van
                   </Button>

@@ -189,7 +189,6 @@ export default function EditCampervanPage() {
 
               <div className="flex gap-3 justify-end pt-4 border-t">
                 <Button
-                  size="sm"
                   type="button"
                   variant="outline"
                   onClick={() => router.push('/campervans')}
@@ -197,7 +196,7 @@ export default function EditCampervanPage() {
                 >
                   Cancel
                 </Button>
-                <Button size="sm" type="submit" disabled={saving}>
+                <Button type="submit" disabled={saving}>
                   <Save className="h-4 w-4" />
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>

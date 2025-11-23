@@ -155,7 +155,6 @@ export default function BookingDetailPage() {
 
           <div className="flex gap-2">
             <Button
-              size="sm"
               onClick={() => router.push(`/bookings/${bookingId}/edit`)}
             >
               <Edit className="h-4 w-4" />
@@ -166,7 +165,6 @@ export default function BookingDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
-                    size="sm"
                     variant="destructive"
                     disabled={isDeleting}
                   >
