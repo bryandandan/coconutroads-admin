@@ -147,6 +147,7 @@ export default function AvailabilityCalendar() {
           components={{
             DayButton: CustomDayButton
           }}
+          weekStartsOn={1}
           className="rounded-md border shadow-sm"
         />
       </div>
