@@ -29,7 +29,8 @@ export default function EditBookingPage() {
     departure_date: '',
     return_date: '',
     van_id: '',
-    requests: ''
+    requests: '',
+    admin_notes: ''
   })
 
   useEffect(() => {
@@ -60,7 +61,8 @@ export default function EditBookingPage() {
         departure_date: data.departure_date ? data.departure_date.split('T')[0] : '',
         return_date: data.return_date ? data.return_date.split('T')[0] : '',
         van_id: data.van_id || '',
-        requests: data.requests || ''
+        requests: data.requests || '',
+        admin_notes: data.admin_notes || ''
       })
     } catch (error) {
       console.error('Error fetching booking:', error)
@@ -103,6 +105,7 @@ export default function EditBookingPage() {
         return_date: string
         van_id: string | null
         requests: string | null
+        admin_notes: string | null
       } = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
@@ -112,7 +115,8 @@ export default function EditBookingPage() {
         departure_date: formData.departure_date,
         return_date: formData.return_date,
         van_id: formData.van_id || null,
-        requests: formData.requests.trim() || null
+        requests: formData.requests.trim() || null,
+        admin_notes: formData.admin_notes.trim() || null
       }
 
       const { error } = await supabase
@@ -321,6 +325,26 @@ export default function EditBookingPage() {
                     value={formData.requests}
                     onChange={(e) => setFormData({ ...formData, requests: e.target.value })}
                     placeholder="Any special requests or comments from the customer..."
+                    className="min-h-[120px] resize-none"
+                    disabled={saving}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Admin Notes */}
+            <Card className="border-pink-200 bg-pink-50">
+              <CardHeader>
+                <CardTitle className="text-pink-900">Admin Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label htmlFor="admin_notes">Internal Admin Notes</Label>
+                  <Textarea
+                    id="admin_notes"
+                    value={formData.admin_notes}
+                    onChange={(e) => setFormData({ ...formData, admin_notes: e.target.value })}
+                    placeholder="Internal notes for admins (not visible to customers)..."
                     className="min-h-[120px] resize-none"
                     disabled={saving}
                   />
