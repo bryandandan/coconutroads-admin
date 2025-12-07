@@ -8,7 +8,10 @@ import { formatDate, calculateDays } from '@/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Mail, Phone, User, Clock, ArrowLeft, Trash2, Car, Edit } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar, Mail, Phone, User, Clock, ArrowLeft, Trash2, Car, Edit, RefreshCw } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +23,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 
 export default function BookingDetailPage() {
   const router = useRouter()
@@ -32,6 +43,10 @@ export default function BookingDetailPage() {
   const [statusHistory, setStatusHistory] = useState<BookingStatusHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
+  const [newStatus, setNewStatus] = useState<BookingStatus>('pending')
+  const [statusNotes, setStatusNotes] = useState('')
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
   useEffect(() => {
     if (bookingId) {
@@ -97,6 +112,59 @@ export default function BookingDetailPage() {
       console.error('Error deleting booking:', error)
       alert('Failed to delete booking. Please try again.')
       setIsDeleting(false)
+    }
+  }
+
+  const openStatusDialog = () => {
+    if (booking) {
+      setNewStatus(booking.status)
+      setStatusNotes('')
+      setIsStatusDialogOpen(true)
+    }
+  }
+
+  const updateBookingStatus = async () => {
+    if (!booking || newStatus === booking.status) {
+      setIsStatusDialogOpen(false)
+      return
+    }
+
+    setIsUpdatingStatus(true)
+    try {
+      const changedBy = 'Admin'
+      const changedAt = new Date().toISOString()
+
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update({
+          status: newStatus,
+          approved_by: changedBy,
+          approved_at: changedAt,
+          admin_notes: statusNotes.trim() || null
+        })
+        .eq('id', bookingId)
+
+      if (bookingError) throw bookingError
+
+      const { error: historyError } = await supabase.from('booking_status_history').insert({
+        booking_id: bookingId,
+        old_status: booking.status,
+        new_status: newStatus,
+        changed_by: changedBy,
+        notes: statusNotes.trim() || null
+      })
+
+      if (historyError) throw historyError
+
+      await fetchBooking()
+      await fetchStatusHistory()
+      setIsStatusDialogOpen(false)
+      setStatusNotes('')
+    } catch (error) {
+      console.error('Error updating booking status:', error)
+      alert('Failed to update booking status. Please try again.')
+    } finally {
+      setIsUpdatingStatus(false)
     }
   }
 
@@ -201,7 +269,17 @@ export default function BookingDetailPage() {
         <div className="mb-6">
           <div className="flex justify-between items-start mb-2">
             <h1 className="text-3xl font-bold text-gray-900">Booking Details</h1>
-            <Badge className={getStatusColor(booking.status)}>{booking.status.toUpperCase()}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusColor(booking.status)}>{booking.status.toUpperCase()}</Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={openStatusDialog}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Change Status
+              </Button>
+            </div>
           </div>
           <p className="text-gray-600">
             Submitted on {formatDate(booking.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -426,6 +504,54 @@ export default function BookingDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Status Change Dialog */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Booking Status</DialogTitle>
+            <DialogDescription>
+              Update the status for {booking.first_name} {booking.last_name}&apos;s booking. You can optionally add
+              notes about this change.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">New Status</Label>
+              <Select value={newStatus} onValueChange={(value) => setNewStatus(value as BookingStatus)}>
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Textarea
+                id="notes"
+                value={statusNotes}
+                onChange={(e) => setStatusNotes(e.target.value)}
+                placeholder="Add notes about this status change..."
+                className="min-h-[100px] resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)} disabled={isUpdatingStatus}>
+              Cancel
+            </Button>
+            <Button onClick={updateBookingStatus} disabled={isUpdatingStatus || newStatus === booking.status}>
+              {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
